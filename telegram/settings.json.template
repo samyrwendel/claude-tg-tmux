@@ -1,0 +1,48 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__plugin_telegram_telegram__reply",
+      "mcp__plugin_telegram_telegram__react",
+      "mcp__plugin_telegram_telegram__edit_message",
+      "mcp__plugin_telegram_telegram__download_attachment"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{INSTALL_DIR}}/hooks/start-typing.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "{{INSTALL_DIR}}/hooks/log-incoming-telegram.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__plugin_telegram_telegram__reply",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{INSTALL_DIR}}/hooks/log-telegram-reply.sh"
+          },
+          {
+            "type": "command",
+            "command": "{{INSTALL_DIR}}/hooks/stop-typing.sh"
+          },
+          {
+            "type": "command",
+            "command": "{{INSTALL_DIR}}/hooks/tts-on-reply.sh",
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}

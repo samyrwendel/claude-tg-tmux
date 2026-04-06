@@ -1,0 +1,18 @@
+[Unit]
+Description=NanoBot — Claude CLI Telegram
+After=network-online.target
+Wants=network-online.target
+OnFailure=nanobot-failure-notify.service
+StartLimitBurst=3
+StartLimitIntervalSec=600
+
+[Service]
+Type=simple
+ExecStart=/bin/bash %h/claude-tg-tmux/launcher.sh
+Restart=on-failure
+RestartSec=10
+KillMode=mixed
+TimeoutStopSec=15
+
+[Install]
+WantedBy=default.target

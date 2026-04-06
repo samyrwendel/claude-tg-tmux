@@ -1,0 +1,6 @@
+[Unit]
+Description=NanoBot failure Telegram notification
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash %h/claude-tg-tmux/notify-failure.sh
