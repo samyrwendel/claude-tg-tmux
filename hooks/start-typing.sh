@@ -53,14 +53,16 @@ if [ -f "$PID_FILE" ]; then
     rm -f "$PID_FILE"
 fi
 
-# Start indicator in background
+# Start indicator in background (max 5 min timeout)
 (
     echo $$ > "$PID_FILE"
-    while true; do
+    DEADLINE=$(($(date +%s) + 300))
+    while [ $(date +%s) -lt $DEADLINE ]; do
         curl -s "https://api.telegram.org/bot${TOKEN}/sendChatAction" \
             -d "chat_id=${CHAT_ID}" -d "action=${ACTION}" > /dev/null 2>&1
         sleep 4
     done
+    rm -f "$PID_FILE"
 ) &
 
 exit 0

@@ -143,7 +143,20 @@ else
     warn "nanobot.service status: $STATUS — verifique: journalctl --user -u nanobot -n 20"
 fi
 
-# ── 8. Resumo ─────────────────────────────────────────────────────────────
+# ── 8. Registrar comandos no bot Telegram ────────────────────────────────
+info "Registrando comandos no bot Telegram..."
+curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setMyCommands" \
+  -d 'commands=[
+    {"command":"help","description":"Lista os comandos"},
+    {"command":"syscheck","description":"Status do sistema e OpenClaw"},
+    {"command":"model","description":"Modelo atual"},
+    {"command":"tts","description":"Liga/desliga voz (on|off)"},
+    {"command":"compact","description":"Compacta o contexto"},
+    {"command":"new","description":"Nova conversa"},
+    {"command":"restart","description":"Reinicia a sessão"}
+  ]' | grep -q '"ok":true' && info "Comandos registrados ✓" || warn "Falha ao registrar comandos — rode manualmente depois"
+
+# ── 9. Resumo ─────────────────────────────────────────────────────────────
 echo ""
 echo "╔══════════════════════════════════════════════╗"
 echo "║           Instalação concluída ✓             ║"
