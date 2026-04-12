@@ -1,7 +1,9 @@
 #!/bin/bash
-# PostToolUse hook: stop typing indicator after reply is sent
-if [ -f /tmp/typing-indicator.pid ]; then
-  kill $(cat /tmp/typing-indicator.pid) 2>/dev/null
-  rm -f /tmp/typing-indicator.pid
-fi
+# PostToolUse (reply): sinaliza fim de processamento e para o spinner
+
+rm -f /tmp/claude-processing /tmp/claude-typing-chat
+
+# Para o spinner animado se estiver rodando
+bash /home/clawd/.claude/hooks/telegram-spinner.sh stop 2>/dev/null
+
 exit 0

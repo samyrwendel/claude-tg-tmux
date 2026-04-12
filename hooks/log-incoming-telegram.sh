@@ -32,6 +32,9 @@ if [ -z "$TEXT" ] || [ -z "$CHAT_ID" ]; then
     exit 0
 fi
 
+# Track last activity time for dream-cycle inactivity check
+touch /tmp/claude-last-activity
+
 SESSION_ID="tg-${CHAT_ID}-$(date +%Y%m%d)"
 
 node /home/clawd/clawd/bigquery-rag/log-interaction.js \

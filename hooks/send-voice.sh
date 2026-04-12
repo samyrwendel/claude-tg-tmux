@@ -48,18 +48,19 @@ if [ ! -s "/tmp/tts-${TS}.ogg" ]; then
 fi
 
 # 3. Send as voice message
-EXTRA=""
+EXTRA=()
 if [ -n "$REPLY_TO" ]; then
-  EXTRA="$EXTRA -F reply_to_message_id=$REPLY_TO"
+  EXTRA+=(-F "reply_to_message_id=$REPLY_TO")
 fi
 if [ -n "$CAPTION" ]; then
-  EXTRA="$EXTRA -F caption=$(echo "$CAPTION" | cut -c1-1024) -F parse_mode=Markdown"
+  CAPTION_TRIMMED=$(echo "$CAPTION" | cut -c1-1024)
+  EXTRA+=(-F "caption=$CAPTION_TRIMMED" -F "parse_mode=Markdown")
 fi
 
 RESULT=$(curl -s "https://api.telegram.org/bot${TOKEN}/sendVoice" \
   -F "chat_id=${CHAT_ID}" \
   -F "voice=@/tmp/tts-${TS}.ogg" \
-  $EXTRA 2>&1)
+  "${EXTRA[@]}" 2>&1)
 
 MSG_ID=$(echo "$RESULT" | jq -r '.result.message_id // empty')
 echo "sent voice msg_id=${MSG_ID}"
