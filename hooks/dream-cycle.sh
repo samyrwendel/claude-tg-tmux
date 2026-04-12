@@ -1,28 +1,22 @@
 #!/bin/bash
-# dream-cycle.sh — DIY AutoDream
-# Consolidação de memory quando sessão está idle
+# dream-cycle.sh — DIY AutoDream (v2: processo independente, sem tmux)
+# Roda como processo claude -p isolado, sobrevive a reinicializações de sessão
 #
 # COMO DESATIVAR:
 #   Opção A — Remover do cron:
 #     crontab -e  →  apagar a linha com dream-cycle.sh
 #   Opção B — Desabilitar temporariamente:
 #     touch /tmp/dream-cycle-disabled   (reativa sozinho no próximo boot)
-#   Opção C — Desabilitar o nativo (settings.json):
-#     python3 -c "import json; d=json.load(open('/home/clawd/.claude/settings.json')); d['autoDream']['enabled']=False; json.dump(d,open('/home/clawd/.claude/settings.json','w'),indent=2)"
 #
 # COMO REATIVAR:
 #   rm /tmp/dream-cycle-disabled
-#   ou adicionar de volta no crontab: 0 4 * * * /home/clawd/.claude/hooks/dream-cycle.sh
 #
 # LOG: /tmp/dream-cycle.log
 
-SESSION="nanobot"
-IDLE_REQUIRED=1800   # 30 minutos mínimo de inatividade
-RETRY_WAIT=900       # Retry em 15min se ainda ativo
-LAST_ACTIVITY_FILE="/tmp/claude-last-activity"
 LOG="/tmp/dream-cycle.log"
-TOKEN=$(grep TELEGRAM_BOT_TOKEN ~/.claude/channels/telegram/.env 2>/dev/null | cut -d= -f2)
-CHAT_ID="30289486"
+PID_FILE="/tmp/dream-cycle-pid"
+DONE_FLAG="/tmp/dream-cycle-done"
+INSIGHTS_FILE="$HOME/.claude/projects/-home-clawd/memory/dream-insights.md"
 
 # Verificar flag de desativação manual
 if [ -f /tmp/dream-cycle-disabled ]; then
@@ -30,32 +24,29 @@ if [ -f /tmp/dream-cycle-disabled ]; then
   exit 0
 fi
 
-if ! tmux has-session -t "$SESSION" 2>/dev/null; then exit 0; fi
-
-# Verificar se sessão está ativa
-PANE=$(tmux capture-pane -t "$SESSION" -p 2>/dev/null | tail -5)
-if echo "$PANE" | grep -qiE "thinking|tokens|✢|⏵|Actualizing|Razzle|Running|Shenanigating|Burrowing|Ruminating"; then
-  echo "$(date): sessão ativa, reagendando em ${RETRY_WAIT}s" >> "$LOG"
-  (sleep $RETRY_WAIT && /home/clawd/.claude/hooks/dream-cycle.sh) &
-  exit 0
-fi
-
-# Verificar inatividade mínima
-if [ -f "$LAST_ACTIVITY_FILE" ]; then
-  LAST=$(stat -c %Y "$LAST_ACTIVITY_FILE" 2>/dev/null || echo 0)
-  NOW=$(date +%s)
-  IDLE=$((NOW - LAST))
-  if [ "$IDLE" -lt "$IDLE_REQUIRED" ]; then
-    WAIT=$((IDLE_REQUIRED - IDLE + 60))
-    echo "$(date): idle ${IDLE}s (precisa ${IDLE_REQUIRED}s), aguardando ${WAIT}s" >> "$LOG"
-    (sleep $WAIT && /home/clawd/.claude/hooks/dream-cycle.sh) &
+# Evitar múltiplos dreams simultâneos
+if [ -f "$PID_FILE" ]; then
+  OLD_PID=$(cat "$PID_FILE")
+  if kill -0 "$OLD_PID" 2>/dev/null; then
+    echo "$(date): dream já rodando (PID $OLD_PID), abortando" >> "$LOG"
     exit 0
+  else
+    rm -f "$PID_FILE"
   fi
 fi
 
-echo "$(date): disparando dream cycle" >> "$LOG"
+# Já tem dream pendente não entregue?
+if [ -f "$DONE_FLAG" ]; then
+  echo "$(date): done flag existe, dream anterior não entregue ainda" >> "$LOG"
+  exit 0
+fi
 
-PROMPT="[DREAM CYCLE] Reflexão profunda. Execute em silêncio:
+TODAY=$(TZ=America/Manaus date '+%Y-%m-%d')
+NOW_TS=$(TZ=America/Manaus date '+%Y-%m-%d %H:%M')
+
+echo "$(date): disparando dream cycle (processo independente)" >> "$LOG"
+
+PROMPT="[DREAM CYCLE] Reflexão profunda noturna. Execute em silêncio, sem narrar:
 
 **1. CONSOLIDAÇÃO DE MEMORY**
 - Ler todos os arquivos em ~/.claude/projects/-home-clawd/memory/*.md
@@ -74,19 +65,49 @@ Com base em tudo que foi feito recentemente (memory, snapshots, lições):
 - Alguma melhoria de infraestrutura, hook, skill ou fluxo?
 - Alguma ideia nova relevante pro portfólio/DeFi/negócios do Samyr?
 
-Registrar os insights num arquivo ~/.claude/projects/-home-clawd/memory/dream-insights.md (criar se não existir, appending com data).
+**4. SALVAR INSIGHTS**
+Salvar os insights em ${INSIGHTS_FILE} (append), com este formato exato:
 
-**4. ENTREGA**
-AO TERMINAR: salvar um resumo compacto dos insights em ~/.claude/projects/-home-clawd/memory/dream-insights.md (append com data/hora). Formato:
-
-## $(TZ=America/Manaus date '+%Y-%m-%d')
-[bullet points dos insights encontrados]
+## ${TODAY}
+[bullet points dos insights encontrados, um por linha com - ]
 ---
 
-NÃO enviar Telegram agora. O relatório será entregue de manhã quando o Samyr estiver online.
-Só registrar: echo 'dream-done' > /tmp/dream-cycle-done
+Se o arquivo não existir, criar.
 
-Silêncio total durante o processo."
+**5. SINALIZAR CONCLUSÃO**
+Após salvar os insights, executar exatamente:
+bash -c 'echo dream-done > /tmp/dream-cycle-done'
 
-tmux send-keys -t "$SESSION" "$PROMPT" Enter
-echo "$(date): prompt injetado" >> "$LOG"
+Silêncio total. Nada de Telegram, nada de output. Só salvar e sinalizar."
+
+# Salvar prompt em arquivo temporário
+PROMPT_FILE=$(mktemp /tmp/dream-prompt-XXXXXX.txt)
+printf '%s' "$PROMPT" > "$PROMPT_FILE"
+
+# Criar wrapper script para evitar problemas de quoting
+RUNNER=$(mktemp /tmp/dream-runner-XXXXXX.sh)
+cat > "$RUNNER" << RUNEOF
+#!/bin/bash
+CLAUDE_BIN="/home/clawd/.npm-global/bin/claude"
+PROMPT_FILE="$PROMPT_FILE"
+PID_FILE="$PID_FILE"
+DONE_FLAG="$DONE_FLAG"
+LOG="$LOG"
+PROMPT=\$(cat "\$PROMPT_FILE")
+\$CLAUDE_BIN -p "\$PROMPT" --dangerously-skip-permissions >> /tmp/dream-output.log 2>&1
+EXIT_CODE=\$?
+echo "\$(date): processo concluído (exit \$EXIT_CODE)" >> "\$LOG"
+if [ "\$EXIT_CODE" -eq 0 ]; then
+  echo dream-done > "\$DONE_FLAG"
+fi
+rm -f "\$PROMPT_FILE" "\$0" "\$PID_FILE"
+RUNEOF
+chmod +x "$RUNNER"
+
+# Rodar como processo completamente independente
+nohup "$RUNNER" &
+DREAM_PID=$!
+echo "$DREAM_PID" > "$PID_FILE"
+disown "$DREAM_PID"
+
+echo "$(date): processo iniciado PID $DREAM_PID" >> "$LOG"
