@@ -49,11 +49,10 @@ start_spinner() {
       sleep 1.5
       NOW=$(date +%s)
       if [ $(( NOW - START )) -gt $MAX_SECONDS ]; then
-        # Timeout: edita mensagem pra indicar timeout e encerra
-        curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/editMessageText" \
+        # Timeout: deletar a mensagem do spinner silenciosamente
+        curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/deleteMessage" \
           -d "chat_id=${CHAT_ID}" \
           -d "message_id=${MSG_ID}" \
-          -d "text=⚠️ timeout (sem resposta em 10min)" \
           > /dev/null 2>&1
         rm -f /tmp/telegram-spinner.pid /tmp/telegram-spinner-msgid /tmp/telegram-spinner-text /tmp/telegram-spinner-start
         rm -f /tmp/claude-processing /tmp/claude-typing-chat

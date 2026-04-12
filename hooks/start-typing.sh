@@ -1,5 +1,6 @@
 #!/bin/bash
 # UserPromptSubmit: sinaliza início de processamento para o typing daemon
+# SOMENTE quando a mensagem vier do Telegram (contém chat_id no prompt)
 
 INPUT=$(cat)
 
@@ -13,7 +14,11 @@ try:
 except: pass
 " 2>/dev/null)
 
-CHAT_ID="${CHAT_ID:-30289486}"
+# Sem chat_id = não é Telegram = não iniciar spinner
+if [ -z "$CHAT_ID" ]; then
+  exit 0
+fi
+
 echo "$CHAT_ID" > /tmp/claude-typing-chat
 touch /tmp/claude-processing
 
