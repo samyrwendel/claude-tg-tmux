@@ -128,12 +128,18 @@ sed "s|%h/claude-tg-tmux|$SCRIPT_DIR|g" \
 sed "s|%h/claude-tg-tmux|$SCRIPT_DIR|g" \
     "$SCRIPT_DIR/systemd/mainbot-failure-notify.service" > "$SYSTEMD_USER/mainbot-failure-notify.service"
 
+cp "$SCRIPT_DIR/systemd/agents-boot.service" "$SYSTEMD_USER/agents-boot.service"
+
+# Criar dirs do bus
+mkdir -p "$HOME/.claude/bus/tasks" "$HOME/.claude/bus/status" "$HOME/.claude/bus/promises"
+chmod +x "$SCRIPT_DIR"/scripts/*.sh
+
 # Injetar .env no serviço
 sed -i "/\[Service\]/a EnvironmentFile=$SCRIPT_DIR/.env" "$SYSTEMD_USER/mainbot.service"
 
 systemctl --user daemon-reload
-systemctl --user enable mainbot.service
-systemctl --user start mainbot.service
+systemctl --user enable mainbot.service agents-boot.service
+systemctl --user start mainbot.service agents-boot.service
 
 sleep 3
 STATUS=$(systemctl --user is-active mainbot.service)
@@ -141,6 +147,13 @@ if [ "$STATUS" = "active" ]; then
     info "mainbot.service ativo ✓"
 else
     warn "mainbot.service status: $STATUS — verifique: journalctl --user -u mainbot -n 20"
+fi
+
+STATUS_AGENTS=$(systemctl --user is-active agents-boot.service)
+if [ "$STATUS_AGENTS" = "active" ]; then
+    info "agents-boot.service ativo ✓ (devbot, execbot, cronbot)"
+else
+    warn "agents-boot.service status: $STATUS_AGENTS — verifique: journalctl --user -u agents-boot -n 20"
 fi
 
 # ── 8. Registrar comandos no bot Telegram ────────────────────────────────
