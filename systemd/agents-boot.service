@@ -1,0 +1,12 @@
+[Unit]
+Description=Claude Multi-Agent Bus — sobe devbot, execbot, cronbot e agentes do registry
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash %h/claude-tg-tmux/scripts/start-all-agents.sh --no-mainbot
+
+[Install]
+WantedBy=default.target

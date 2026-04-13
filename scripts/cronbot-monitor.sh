@@ -9,7 +9,8 @@ LOG="/tmp/cronbot-monitor.log"
 TASK_TIMEOUT=300       # 5 minutos sem update = travado
 PROMISE_CHECK=900      # checar promises a cada 15min
 CRON_CHECK=3600        # checar crontab a cada 1h
-SESSIONS_TO_WATCH="devbot execbot"
+SESSIONS_TO_WATCH="devbot execbot degenbot"
+BUS_REGISTRY="${HOME}/.claude/bus/agents.registry"
 
 log() { echo "[$(TZ=America/Manaus date '+%Y-%m-%d %H:%M:%S')] $*" >> "$LOG"; }
 
@@ -81,6 +82,7 @@ check_promises() {
 }
 
 check_sessions() {
+  # Agentes nativos fixos + degenbot
   for session in $SESSIONS_TO_WATCH; do
     if ! /usr/bin/tmux has-session -t "$session" 2>/dev/null; then
       log "Sessão $session não encontrada — tentando reiniciar"
@@ -93,6 +95,17 @@ check_sessions() {
       fi
     fi
   done
+
+  # Agentes dinâmicos do spawnbot registry
+  [ -f "$BUS_REGISTRY" ] || return
+  while IFS='|' read -r nome modelo workspace esp criado; do
+    [ -z "$nome" ] && continue
+    if ! /usr/bin/tmux has-session -t "$nome" 2>/dev/null; then
+      log "Agente dinâmico '$nome' morto — recriando via spawnbot"
+      bash "${HOME}/claude-tg-tmux/scripts/spawnbot.sh" create "$nome" "$esp" "$modelo" "$workspace" &
+      inject_mainbot "[CRONBOT] ⚠️ Agente '${nome}' estava morto — recriando (${modelo})."
+    fi
+  done < "$BUS_REGISTRY"
 }
 
 check_crontab() {
