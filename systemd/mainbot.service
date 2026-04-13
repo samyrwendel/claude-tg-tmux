@@ -2,7 +2,7 @@
 Description=NanoBot — Claude CLI Telegram
 After=network-online.target
 Wants=network-online.target
-OnFailure=nanobot-failure-notify.service
+OnFailure=mainbot-failure-notify.service
 StartLimitBurst=3
 StartLimitIntervalSec=600
 

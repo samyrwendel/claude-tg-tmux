@@ -45,7 +45,7 @@ bash install.sh
 | `ALLOWED_USER_IDS` | ✅ | IDs autorizados (ex: `30289486,99887766`) |
 | `ADMIN_CHAT_ID` | — | Chat para alertas (padrão: primeiro da lista) |
 | `WORKSPACE` | — | Diretório de trabalho do Claude |
-| `SESSION_NAME` | — | Nome da sessão tmux (padrão: `nanobot`) |
+| `SESSION_NAME` | — | Nome da sessão tmux (padrão: `mainbot`) |
 | `ELEVENLABS_API_KEY` | — | Chave ElevenLabs para TTS |
 | `ELEVENLABS_VOICE_ID` | — | ID da voz (padrão: voz Degenerado) |
 | `TTS_ENABLED` | — | `true`/`false` (padrão: `true`) |
@@ -57,19 +57,19 @@ bash install.sh
 
 ```bash
 # Ver sessão tmux
-tmux attach -t nanobot
+tmux attach -t mainbot
 
 # Status do serviço
-systemctl --user status nanobot
+systemctl --user status mainbot
 
 # Logs em tempo real
-journalctl --user -u nanobot -f
+journalctl --user -u mainbot -f
 
 # Reiniciar manualmente
-systemctl --user restart nanobot
+systemctl --user restart mainbot
 
 # Parar
-systemctl --user stop nanobot
+systemctl --user stop mainbot
 ```
 
 ## Estrutura
@@ -88,8 +88,8 @@ claude-tg-tmux/
 │   ├── log-incoming-telegram.sh # Hook UserPromptSubmit → BQ
 │   └── log-telegram-reply.sh   # Hook PostToolUse → BQ
 ├── systemd/
-│   ├── nanobot.service
-│   └── nanobot-failure-notify.service
+│   ├── mainbot.service
+│   └── mainbot-failure-notify.service
 └── telegram/
     └── settings.json.template  # Hooks do Claude Code
 ```
