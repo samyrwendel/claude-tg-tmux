@@ -194,7 +194,7 @@ while true; do
     CONTENT=$(pane)
 
     # Prompts críticos: resolver IMEDIATAMENTE, independente de estar "ativo"
-    if echo "$CONTENT" | grep -qE "Do you want to proceed\?|Would you like to proceed\?|ready to execute\. Would you like to proceed|Do you want to allow Claude to fetch|Do you want to allow this connection|Do you want to use this API key|Allow external CLAUDE\.md file imports"; then
+    if echo "$CONTENT" | grep -qE "Do you want to proceed\?|Would you like to proceed\?|ready to execute\. Would you like to proceed|Do you want to allow Claude to fetch|Do you want to allow this connection|Do you want to use this API key|Allow external CLAUDE\.md file imports|requested permissions to edit.*sensitive file"; then
         /usr/bin/tmux send-keys -t "$SESSION_NAME" "1" Enter
         log "RESOLVED (priority): blocking proceed/allow prompt"
         STUCK_COUNT=0
@@ -221,7 +221,9 @@ while true; do
     fi
 
     # RC=2: suspeito. Verifica se tá travado (tela idêntica por múltiplos checks)
-    CURRENT_HASH=$(echo "$CONTENT" | md5sum | cut -d' ' -f1)
+    # Normalizar: remover escape ANSI e chars de controle antes do hash
+    # Evita falso negativo quando cursor piscando muda o hash
+    CURRENT_HASH=$(echo "$CONTENT" | sed 's/\x1b\[[0-9;]*[mGKHF]//g' | tr -d '\r' | md5sum | cut -d' ' -f1)
     if [ "$CURRENT_HASH" = "$PREV_SCREEN" ]; then
         STUCK_COUNT=$((STUCK_COUNT + 1))
         log "Screen unchanged (stuck count: $STUCK_COUNT/$STUCK_THRESHOLD)"
