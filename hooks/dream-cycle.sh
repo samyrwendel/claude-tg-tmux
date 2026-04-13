@@ -18,13 +18,21 @@ PID_FILE="/tmp/dream-cycle-pid"
 DONE_FLAG="/tmp/dream-cycle-done"
 INSIGHTS_FILE="$HOME/.claude/projects/-home-clawd/memory/dream-insights.md"
 
+# Lock global — evita race condition com múltiplas instâncias simultâneas
+LOCK_FILE="/tmp/dream-cycle.lock"
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+  echo "$(date): outra instância rodando (flock), abortando" >> "$LOG"
+  exit 0
+fi
+
 # Verificar flag de desativação manual
 if [ -f /tmp/dream-cycle-disabled ]; then
   echo "$(date): dream-cycle desabilitado (flag existe)" >> "$LOG"
   exit 0
 fi
 
-# Evitar múltiplos dreams simultâneos
+# Evitar múltiplos dreams simultâneos (check secundário via PID)
 if [ -f "$PID_FILE" ]; then
   OLD_PID=$(cat "$PID_FILE")
   if kill -0 "$OLD_PID" 2>/dev/null; then
@@ -65,17 +73,40 @@ Com base em tudo que foi feito recentemente (memory, snapshots, lições):
 - Alguma melhoria de infraestrutura, hook, skill ou fluxo?
 - Alguma ideia nova relevante pro portfólio/DeFi/negócios do Samyr?
 
-**4. SALVAR INSIGHTS**
-Salvar os insights em ${INSIGHTS_FILE} (append), com este formato exato:
+**4. SALVAR SONHOS E PENSAMENTOS** (para entrega matinal ao Samyr)
+Arquivo: ${INSIGHTS_FILE} (append)
+
+Escrever em linguagem natural, como mensagem de conversa. Tom: direto, sem formalidade.
+Máximo 4 blocos. Cada bloco: 2-4 linhas, sem bullet points internos.
+Só o que realmente vale acordar o Samyr — nada vago, nada inventado.
+
+Formato exato:
 
 ## ${TODAY}
-[bullet points dos insights encontrados, um por linha com - ]
+
+💡 Tive uma ideia: [ideia concreta, por que faz sentido, o que resolve]
+
+🔍 Estava pensando no [projeto/sistema X] e percebi que [insight ou padrão]
+
+⚠️ Lembrei que [pendência urgente] — [o que está em risco]
+
+🌙 Sonhei com uma solução pra [problema]: [raciocínio livre]
+
 ---
 
-Se o arquivo não existir, criar.
+**5. SALVAR AÇÕES OPCIONAIS** (para execução ociosa durante o dia)
+Arquivo: ~/.claude/projects/-home-clawd/memory/dream-actions.md (sobrescrever)
 
-**5. SINALIZAR CONCLUSÃO**
-Após salvar os insights, executar exatamente:
+Listar apenas ações concretas que valem ser executadas SE houver tempo ocioso.
+Se tudo estiver bem e não houver nada urgente, escrever: NENHUMA
+
+Formato:
+## ${TODAY}
+- [ação específica: o que fazer, ferramenta/skill a usar, resultado esperado]
+- [outra ação]
+
+**6. SINALIZAR CONCLUSÃO**
+Após salvar ambos os arquivos, executar:
 bash -c 'echo dream-done > /tmp/dream-cycle-done'
 
 Silêncio total. Nada de Telegram, nada de output. Só salvar e sinalizar."

@@ -17,40 +17,59 @@ if echo "$PANE" | grep -qiE "thinking|tokens|✢|⏵|Actualizing|Razzle|Running|
   exit 0  # Ocupado — tentar na próxima rodada
 fi
 
+ACTIONS_FILE="$HOME/.claude/projects/-home-clawd/memory/dream-actions.md"
+TODAY=$(TZ=America/Manaus date '+%Y-%m-%d')
+
+# Verificar se há ações do sonho de hoje
+HAS_ACTIONS=0
+if [ -f "$ACTIONS_FILE" ]; then
+  ACTIONS=$(awk "/^## ${TODAY}/{found=1; next} found && /^## /{exit} found{print}" "$ACTIONS_FILE" | grep -v "^NENHUMA" | grep "^-" | head -5)
+  [ -n "$ACTIONS" ] && HAS_ACTIONS=1
+fi
+
+DREAM_SECTION=""
+if [ "$HAS_ACTIONS" -eq 1 ]; then
+  DREAM_SECTION="**0. AÇÕES DO SONHO (prioridade)**
+Durante o sonho de hoje foram identificadas ações pendentes. Se houver tempo ocioso agora, executar:
+${ACTIONS}
+
+Só executar se fizer sentido no contexto atual. Se já foram feitas ou não forem mais relevantes, ignorar.
+
+"
+fi
+
 PROMPT="[CHECKIN PROATIVO] Exame de consciência silencioso. Execute em ordem:
 
-**1. PROMESSAS E PENDÊNCIAS**
+${DREAM_SECTION}**1. PROMESSAS E PENDÊNCIAS**
 - Ler ~/.claude/projects/-home-clawd/memory/promises.md
 - Há promessas abertas vencidas ou próximas de vencer? → Alertar Samyr
 - Ler project_payments_pending.md — contas próximas? → Alertar Samyr
 
-**2. PESQUISA PROATIVA (obrigatória — pelo menos 1 insight de valor)**
-Escolher pelo menos 1 tema relevante e pesquisar:
+**2. PESQUISA PROATIVA (só se houver algo relevante)**
+Se houver tempo e não houver ações urgentes, pesquisar 1 tema:
 - Polymarket: posições abertas mudaram? Algo expirando em breve?
 - Crypto/DeFi: notícia relevante pro portfólio?
 - Milhas: promoção Smiles/TudoAzul/LATAM Pass ativa?
-- Geopolítica: evento que afeta apostas abertas?
 - IA/Tech: novidade relevante?
 
 **3. ATUALIZAR ESTADO (OBRIGATÓRIO após cada checkin)**
-Ao terminar as pesquisas, atualizar ${STATE_FILE} com:
+Ao terminar, atualizar ${STATE_FILE} com:
 \`\`\`bash
 python3 -c \"
 import json, time
 path = '${STATE_FILE}'
 d = json.load(open(path))
 d['lastChecks']['promises'] = int(time.time())
-d['lastChecks']['polymarket'] = int(time.time())  # se verificou
+d['lastChecks']['polymarket'] = int(time.time())
 d['notes'] = 'Heartbeat $(date +%d/%m/%Y\ %H:%M). [RESULTADO_RESUMIDO_EM_1_LINHA]'
 json.dump(d, open(path, 'w'), indent=2, ensure_ascii=False)
 \"
 \`\`\`
-Substituir [RESULTADO_RESUMIDO_EM_1_LINHA] com o que encontrou (ex: 'Sem pendências urgentes' ou 'Alertado sobre X').
 
 **4. ENTREGA**
-- SE encontrou algo relevante: enviar ao Samyr via Telegram
-- SE não há nada urgente: não fazer nada, não responder nada
+- SE encontrou algo relevante ou executou ação: enviar ao Samyr via Telegram
+- SE tudo bem e nada pra fazer: silêncio total
 
-**Regra:** Só enviar mensagem se há valor real. Silêncio > mensagem genérica."
+**Regra:** Silêncio > mensagem genérica. Só falar se há valor real."
 
 tmux send-keys -t "$SESSION" "$PROMPT" Enter
