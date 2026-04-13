@@ -20,7 +20,7 @@ trap cleanup EXIT TERM INT
 
 # Start Claude CLI in tmux (needs PTY)
 /usr/bin/tmux new-session -d -s "$SESSION_NAME" -c "$HOME" \
-    "$CLAUDE_BIN --channels plugin:telegram@claude-plugins-official --permission-mode bypassPermissions --dangerously-skip-permissions"
+    "CLAUDE_CONFIG_DIR=${HOME}/.claude/agents/mainbot $CLAUDE_BIN --channels plugin:telegram@claude-plugins-official --permission-mode bypassPermissions --dangerously-skip-permissions"
 
 # Auto-accept trust prompt
 sleep 5
