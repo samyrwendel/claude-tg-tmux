@@ -123,24 +123,24 @@ SYSTEMD_USER="$HOME/.config/systemd/user"
 mkdir -p "$SYSTEMD_USER"
 
 sed "s|%h/claude-tg-tmux|$SCRIPT_DIR|g" \
-    "$SCRIPT_DIR/systemd/nanobot.service" > "$SYSTEMD_USER/nanobot.service"
+    "$SCRIPT_DIR/systemd/mainbot.service" > "$SYSTEMD_USER/mainbot.service"
 
 sed "s|%h/claude-tg-tmux|$SCRIPT_DIR|g" \
-    "$SCRIPT_DIR/systemd/nanobot-failure-notify.service" > "$SYSTEMD_USER/nanobot-failure-notify.service"
+    "$SCRIPT_DIR/systemd/mainbot-failure-notify.service" > "$SYSTEMD_USER/mainbot-failure-notify.service"
 
 # Injetar .env no serviço
-sed -i "/\[Service\]/a EnvironmentFile=$SCRIPT_DIR/.env" "$SYSTEMD_USER/nanobot.service"
+sed -i "/\[Service\]/a EnvironmentFile=$SCRIPT_DIR/.env" "$SYSTEMD_USER/mainbot.service"
 
 systemctl --user daemon-reload
-systemctl --user enable nanobot.service
-systemctl --user start nanobot.service
+systemctl --user enable mainbot.service
+systemctl --user start mainbot.service
 
 sleep 3
-STATUS=$(systemctl --user is-active nanobot.service)
+STATUS=$(systemctl --user is-active mainbot.service)
 if [ "$STATUS" = "active" ]; then
-    info "nanobot.service ativo ✓"
+    info "mainbot.service ativo ✓"
 else
-    warn "nanobot.service status: $STATUS — verifique: journalctl --user -u nanobot -n 20"
+    warn "mainbot.service status: $STATUS — verifique: journalctl --user -u mainbot -n 20"
 fi
 
 # ── 8. Registrar comandos no bot Telegram ────────────────────────────────
@@ -162,9 +162,9 @@ echo "╔═══════════════════════�
 echo "║           Instalação concluída ✓             ║"
 echo "╚══════════════════════════════════════════════╝"
 echo ""
-echo "  Sessão tmux:  tmux attach -t ${SESSION_NAME:-nanobot}"
-echo "  Status:       systemctl --user status nanobot"
-echo "  Logs:         journalctl --user -u nanobot -f"
+echo "  Sessão tmux:  tmux attach -t ${SESSION_NAME:-mainbot}"
+echo "  Status:       systemctl --user status mainbot"
+echo "  Logs:         journalctl --user -u mainbot -f"
 echo ""
 echo "  TTS:          ${TTS_ENABLED:-true}"
 echo "  BQ logging:   ${BQ_ENABLED:-false}"

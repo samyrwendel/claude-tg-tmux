@@ -1,9 +1,9 @@
 #!/bin/bash
 # proactive-checkin.sh
-# Injeta prompt de exame de consciência na sessão nanobot
+# Injeta prompt de exame de consciência na sessão mainbot
 # Rodado via cron a cada 4h
 
-SESSION="nanobot"
+SESSION="mainbot"
 STATE_FILE="$HOME/.claude/projects/-home-clawd/memory/heartbeat-state.json"
 
 # Verificar se sessão está ativa

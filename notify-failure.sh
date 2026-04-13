@@ -2,7 +2,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 [ -f "$SCRIPT_DIR/.env" ] && source "$SCRIPT_DIR/.env"
 
-COOLDOWN_FILE="/tmp/nanobot-notify-cooldown"
+COOLDOWN_FILE="/tmp/mainbot-notify-cooldown"
 COOLDOWN_SECS=600
 
 if [ -f "$COOLDOWN_FILE" ]; then

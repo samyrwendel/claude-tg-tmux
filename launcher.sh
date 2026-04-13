@@ -1,13 +1,13 @@
 #!/bin/bash
 # claude-tg-tmux launcher — inicia Claude CLI em sessão tmux persistente
-# Gerenciado pelo systemd (nanobot.service)
+# Gerenciado pelo systemd (mainbot.service)
 
 set -a
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 [ -f "$SCRIPT_DIR/.env" ] && source "$SCRIPT_DIR/.env"
 set +a
 
-SESSION_NAME="${SESSION_NAME:-nanobot}"
+SESSION_NAME="${SESSION_NAME:-mainbot}"
 CLAUDE_BIN="${CLAUDE_BIN:-$(which claude)}"
 HEALTH_INTERVAL=60
 

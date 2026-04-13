@@ -66,8 +66,8 @@ else
   echo "$(date): erro ao enviar Telegram: $RESPONSE" >> "$LOG"
 fi
 
-# Injetar ideias grandes no nanobot para execução via GSD
-SESSION="nanobot"
+# Injetar ideias grandes no mainbot para execução via GSD
+SESSION="mainbot"
 if tmux has-session -t "$SESSION" 2>/dev/null; then
   # Extrair bullets de URGENTE e PADRÕES que mencionam automação/projeto
   BIG_IDEAS=$(echo "$SECTION" | grep -iE "(automação|bot|sistema|projeto|cron|pipeline|integração|skill)" | grep "^-" | head -3)
@@ -77,6 +77,6 @@ if tmux has-session -t "$SESSION" 2>/dev/null; then
 Ideias do sonho de hoje:
 ${BIG_IDEAS}"
     tmux send-keys -t "$SESSION" "$INJECT_PROMPT" Enter
-    echo "$(date): ideias grandes injetadas no nanobot para GSD" >> "$LOG"
+    echo "$(date): ideias grandes injetadas no mainbot para GSD" >> "$LOG"
   fi
 fi

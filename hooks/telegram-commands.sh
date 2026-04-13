@@ -121,7 +121,7 @@ MSG
 
   /new)
     tg_send "Iniciando nova conversa..."
-    tmux send-keys -t nanobot "/new" Enter
+    tmux send-keys -t mainbot "/new" Enter
     echo '{"decision":"block","reason":"Command handled"}'
     ;;
 

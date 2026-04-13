@@ -13,7 +13,7 @@
 #
 # Safety: NEVER approves rm, delete, drop, truncate, or unknown prompts
 
-SESSIONS="claude nanobot"
+SESSIONS="claude mainbot"
 LOG="/tmp/tmux-auto-approve.log"
 STATE_DIR="/tmp/tmux-auto-approve"
 mkdir -p "$STATE_DIR"
