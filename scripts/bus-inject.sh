@@ -5,7 +5,7 @@
 # Exemplo:
 #   bus-inject.sh dev "Refatorar auth.js" "/home/clawd/clawd/auth.js" "testes passando" "" "" "high"
 
-AGENT="${1:?Agente obrigatório: dev|exec}"
+AGENT="${1:?Agente obrigatório: dev|exec|<nome-do-agente>}"
 TAREFA="${2:?Tarefa obrigatória}"
 CONTEXTO="${3:-}"
 CRITERIO="${4:-concluído sem erro}"
@@ -27,7 +27,19 @@ TASK_FILE="${BUS_DIR}/tasks/${TASK_ID}.task"
 case "$AGENT" in
   dev|devbot)   SESSION="devbot" ;;
   exec|execbot) SESSION="execbot" ;;
-  *)            echo "Agente inválido: $AGENT (use dev ou exec)" >&2; exit 1 ;;
+  degen|degenbot) SESSION="degenbot" ;;
+  *)
+    # Checar registry de agentes dinâmicos (spawnbot)
+    REGISTRY="${HOME}/.claude/bus/agents.registry"
+    if [ -f "$REGISTRY" ] && grep -q "^${AGENT}|" "$REGISTRY" 2>/dev/null; then
+      SESSION="$AGENT"
+    else
+      echo "Agente inválido: $AGENT — não encontrado nos agentes nativos nem no registry" >&2
+      echo "Agentes nativos: dev, exec, degen" >&2
+      echo "Registry: $(cut -d'|' -f1 "$REGISTRY" 2>/dev/null | tr '\n' ' ')" >&2
+      exit 1
+    fi
+    ;;
 esac
 
 # Verificar se sessão existe
