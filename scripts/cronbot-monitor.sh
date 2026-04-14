@@ -33,6 +33,23 @@ inject_mainbot() {
   fi
 }
 
+check_new_notifications() {
+  local notify_file="${BUS_DIR}/pending-notifications"
+  [ -f "$notify_file" ] || return
+
+  # Ler e limpar atomicamente (swap)
+  local tmp="${notify_file}.processing"
+  mv "$notify_file" "$tmp" 2>/dev/null || return
+
+  while IFS='|' read -r task_id agent created tarefa; do
+    [ -z "$task_id" ] && continue
+    inject_mainbot "[CRONBOT] 📋 Task ${task_id} delegada → ${agent}. Tarefa: ${tarefa}"
+    log "Notificação: Task ${task_id} → ${agent}"
+  done < "$tmp"
+
+  rm -f "$tmp"
+}
+
 check_tasks() {
   local now
   now=$(date +%s)
@@ -151,6 +168,9 @@ while true; do
   sleep 60
 
   NOW=$(date +%s)
+
+  # Notificações de novas tasks (bus-inject.sh)
+  check_new_notifications
 
   # Tasks: checar a cada ciclo (1min)
   check_tasks

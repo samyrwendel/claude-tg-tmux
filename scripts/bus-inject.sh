@@ -61,6 +61,27 @@ CONTEXTO: ${CONTEXTO}
 CRITÉRIO: ${CRITERIO}
 ARQUIVOS: ${ARQUIVOS}
 
+SKILLS DISPONÍVEIS (usar quando relevante):
+$(case "$AGENT" in
+  dev|devbot) echo "  /review — code review antes de DONE (OBRIGATÓRIO se modificou código)
+  /investigate — debug de bug com root cause
+  /ship — commit + push + PR
+  /health — health check do código
+  /careful — modo seguro para mudanças destrutivas
+  /guard — guardrails para rm -rf, DROP TABLE, force-push
+  /checkpoint — salvar progresso entre sessões
+  /gsd-code-review — code review detalhado
+  /gsd-debug — workflow de debug
+  /gsd-secure-phase — auditoria de segurança
+  /gsd-verify-work — verificar se o trabalho cumpriu o objetivo" ;;
+  exec|execbot) echo "  /investigate — debug/análise rápida
+  /gsd-explore — explorar codebase
+  /bigquery-rag — buscar contexto no BQ" ;;
+  degen|degenbot) echo "  /polymarket — dados de mercado
+  /dex-chart — gráficos DeFi
+  /trading — análise de trade" ;;
+esac)
+
 AO TERMINAR: escrever em ~/.claude/bus/status/${TASK_ID}.status
 FORMATO DO STATUS:
 STATUS: DONE|FAILED
@@ -71,9 +92,36 @@ TASKEOF
 
 echo "[bus-inject] Task ${TASK_ID} criada → ${SESSION}"
 
+# Aguardar agente estar idle (prompt "❯" visível) antes de injetar
+wait_idle() {
+  local session="$1"
+  local max_wait=30
+  local elapsed=0
+  while [ $elapsed -lt $max_wait ]; do
+    local pane
+    pane=$(/usr/bin/tmux capture-pane -t "$session" -p -S -5 2>/dev/null)
+    # Claude Code idle: linha com "❯ " no final (prompt vazio esperando input)
+    if echo "$pane" | grep -qE '^\s*❯\s*$'; then
+      return 0
+    fi
+    sleep 1
+    elapsed=$((elapsed + 1))
+  done
+  # Timeout — injeta mesmo assim
+  return 0
+}
+
 # Injetar no agente via tmux
-# Usar arquivo de task como contexto, enviando apenas um marcador para o agente
+wait_idle "$SESSION"
 /usr/bin/tmux send-keys -t "$SESSION" "# [BUS TASK ${TASK_ID}] Veja em ${TASK_FILE}" Enter
 
-echo "[bus-inject] Injetado em tmux:${SESSION}"
+# Criar lock para cronbot rastrear timeout
+LOCK_FILE="${BUS_DIR}/tasks/${TASK_ID}.task.lock"
+touch "$LOCK_FILE"
+
+# Notificar cronbot: registrar task pendente para pickup
+NOTIFY_FILE="${BUS_DIR}/pending-notifications"
+echo "${TASK_ID}|${AGENT}|$(TZ=America/Manaus date '+%Y-%m-%d %H:%M')|${TAREFA}" >> "$NOTIFY_FILE"
+
+echo "[bus-inject] Injetado em tmux:${SESSION} (lock + notify criados)"
 echo "$TASK_ID"
