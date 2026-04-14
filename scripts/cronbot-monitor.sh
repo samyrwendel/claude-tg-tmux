@@ -12,7 +12,16 @@ CRON_CHECK=3600        # checar crontab a cada 1h
 SESSIONS_TO_WATCH="devbot execbot degenbot"
 BUS_REGISTRY="${HOME}/.claude/bus/agents.registry"
 
-log() { echo "[$(TZ=America/Manaus date '+%Y-%m-%d %H:%M:%S')] $*" >> "$LOG"; }
+LOG_MAX_LINES=1000
+log() {
+  echo "[$(TZ=America/Manaus date '+%Y-%m-%d %H:%M:%S')] $*" >> "$LOG"
+  # Rotação: manter apenas as últimas LOG_MAX_LINES linhas
+  local lines
+  lines=$(wc -l < "$LOG" 2>/dev/null || echo 0)
+  if [ "$lines" -gt "$LOG_MAX_LINES" ]; then
+    tail -500 "$LOG" > "${LOG}.tmp" && mv "${LOG}.tmp" "$LOG"
+  fi
+}
 
 inject_mainbot() {
   local msg="$1"
@@ -40,7 +49,17 @@ check_tasks() {
       if [ "$LOCK_AGE" -gt "$TASK_TIMEOUT" ]; then
         AGENT=$(grep "^AGENT:" "$task_file" | cut -d' ' -f2)
         TAREFA=$(grep "^TAREFA:" "$task_file" | cut -d' ' -f2-)
-        inject_mainbot "[CRONBOT] ⚠️ ${AGENT}bot sem resposta na task ${TASK_ID} (${LOCK_AGE}s). Tarefa: ${TAREFA}"
+        # Marcar como FAILED automaticamente após timeout
+        mkdir -p "${BUS_DIR}/status"
+        cat > "$STATUS_FILE" << STATUSEOF
+STATUS: FAILED
+RESUMO: Timeout após ${LOCK_AGE}s sem resposta do agente
+COMMIT: -
+DETALHES: Lock criado mas agente não finalizou dentro de ${TASK_TIMEOUT}s
+STATUSEOF
+        rm -f "$LOCK_FILE"
+        inject_mainbot "[CRONBOT] ❌ Task ${TASK_ID} marcada FAILED por timeout (${LOCK_AGE}s). Agente: ${AGENT}. Tarefa: ${TAREFA}"
+        log "Task ${TASK_ID} marcada FAILED por timeout (${LOCK_AGE}s)"
       fi
       continue
     fi
@@ -96,8 +115,10 @@ check_sessions() {
     fi
   done
 
-  # Agentes dinâmicos do spawnbot registry
+  # Agentes dinâmicos do spawnbot registry (com flock para leitura segura)
   [ -f "$BUS_REGISTRY" ] || return
+  local registry_snapshot
+  registry_snapshot=$(flock -s "${BUS_REGISTRY}.lock" cat "$BUS_REGISTRY" 2>/dev/null)
   while IFS='|' read -r nome modelo workspace esp criado; do
     [ -z "$nome" ] && continue
     if ! /usr/bin/tmux has-session -t "$nome" 2>/dev/null; then
@@ -105,7 +126,7 @@ check_sessions() {
       bash "${HOME}/claude-tg-tmux/scripts/spawnbot.sh" create "$nome" "$esp" "$modelo" "$workspace" &
       inject_mainbot "[CRONBOT] ⚠️ Agente '${nome}' estava morto — recriando (${modelo})."
     fi
-  done < "$BUS_REGISTRY"
+  done <<< "$registry_snapshot"
 }
 
 check_crontab() {

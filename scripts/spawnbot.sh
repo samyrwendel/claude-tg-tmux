@@ -101,17 +101,19 @@ CLAUDEEOF
 
   # Lançar sessão tmux
   /usr/bin/tmux new-session -d -s "$SESSION" -c "$WORKSPACE" \
-    "${CLAUDE_BIN} --model ${MODELO} --dangerously-skip-permissions"
+    "$CLAUDE_BIN" --model "$MODELO" --dangerously-skip-permissions
 
   sleep 3
   /usr/bin/tmux send-keys -t "$SESSION" Enter 2>/dev/null
 
-  # Registrar no bus registry
+  # Registrar no bus registry (com flock para evitar race condition)
   mkdir -p "$(dirname "$BUS_REGISTRY")"
-  # Remove entrada antiga se existir
-  grep -v "^${NOME}|" "$BUS_REGISTRY" > "${BUS_REGISTRY}.tmp" 2>/dev/null
-  mv "${BUS_REGISTRY}.tmp" "$BUS_REGISTRY" 2>/dev/null || true
-  echo "${NOME}|${MODELO}|${WORKSPACE}|${ESPECIALIDADE}|$(TZ=America/Manaus date '+%Y-%m-%d %H:%M')" >> "$BUS_REGISTRY"
+  (
+    flock -x 9
+    grep -v "^${NOME}|" "$BUS_REGISTRY" > "${BUS_REGISTRY}.tmp" 2>/dev/null
+    mv "${BUS_REGISTRY}.tmp" "$BUS_REGISTRY" 2>/dev/null || true
+    echo "${NOME}|${MODELO}|${WORKSPACE}|${ESPECIALIDADE}|$(TZ=America/Manaus date '+%Y-%m-%d %H:%M')" >> "$BUS_REGISTRY"
+  ) 9>"${BUS_REGISTRY}.lock"
 
   log "Agente criado: $NOME ($MODELO) — $ESPECIALIDADE"
 
@@ -145,9 +147,12 @@ cmd_list() {
 cmd_kill() {
   local NOME="${1:?Nome do agente obrigatório}"
   /usr/bin/tmux kill-session -t "$NOME" 2>/dev/null && echo "[spawnbot] Sessão '$NOME' encerrada." || echo "[spawnbot] Sessão '$NOME' não encontrada."
-  # Remove do registry
-  grep -v "^${NOME}|" "$BUS_REGISTRY" > "${BUS_REGISTRY}.tmp" 2>/dev/null
-  mv "${BUS_REGISTRY}.tmp" "$BUS_REGISTRY" 2>/dev/null || true
+  # Remove do registry (com flock)
+  (
+    flock -x 9
+    grep -v "^${NOME}|" "$BUS_REGISTRY" > "${BUS_REGISTRY}.tmp" 2>/dev/null
+    mv "${BUS_REGISTRY}.tmp" "$BUS_REGISTRY" 2>/dev/null || true
+  ) 9>"${BUS_REGISTRY}.lock"
   rm -rf "${AGENTS_DIR}/${NOME}"
   log "Agente removido: $NOME"
   inject_mainbot "[SPAWNBOT] Agente '${NOME}' foi encerrado e removido do bus."
