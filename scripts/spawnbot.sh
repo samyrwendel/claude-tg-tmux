@@ -65,8 +65,20 @@ cmd_create() {
     exit 1
   fi
 
+  # Rollback: limpa tudo se qualquer etapa falhar
+  _rollback() {
+    log "ROLLBACK: limpando agente $NOME após falha"
+    /usr/bin/tmux kill-session -t "$SESSION" 2>/dev/null
+    rm -rf "$AGENT_DIR"
+    (
+      flock -x 9
+      grep -v "^${NOME}|" "$BUS_REGISTRY" > "${BUS_REGISTRY}.tmp" 2>/dev/null
+      mv "${BUS_REGISTRY}.tmp" "$BUS_REGISTRY" 2>/dev/null || true
+    ) 9>"${BUS_REGISTRY}.lock"
+  }
+
   # Criar diretório do agente
-  mkdir -p "$AGENT_DIR"
+  mkdir -p "$AGENT_DIR" || { echo "[spawnbot] Erro ao criar $AGENT_DIR" >&2; exit 1; }
 
   # Gerar CLAUDE.md específico
   cat > "${AGENT_DIR}/CLAUDE.md" << CLAUDEEOF
@@ -100,11 +112,22 @@ Ao receber uma mensagem \`[BUS TASK YYYYMMDD-NNN]\`:
 CLAUDEEOF
 
   # Lançar sessão tmux
-  /usr/bin/tmux new-session -d -s "$SESSION" -c "$WORKSPACE" \
-    "$CLAUDE_BIN" --model "$MODELO" --dangerously-skip-permissions
+  if ! /usr/bin/tmux new-session -d -s "$SESSION" -c "$WORKSPACE" \
+    "$CLAUDE_BIN" --model "$MODELO" --dangerously-skip-permissions; then
+    echo "[spawnbot] Erro ao criar sessão tmux '$SESSION'" >&2
+    _rollback
+    exit 1
+  fi
 
   sleep 3
   /usr/bin/tmux send-keys -t "$SESSION" Enter 2>/dev/null
+
+  # Verificar que sessão subiu
+  if ! /usr/bin/tmux has-session -t "$SESSION" 2>/dev/null; then
+    echo "[spawnbot] Sessão '$SESSION' morreu logo após criar" >&2
+    _rollback
+    exit 1
+  fi
 
   # Registrar no bus registry (com flock para evitar race condition)
   mkdir -p "$(dirname "$BUS_REGISTRY")"
