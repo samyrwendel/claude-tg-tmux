@@ -27,6 +27,10 @@ bash "${SCRIPTS_DIR}/execbot-launcher.sh"
 log "Iniciando cronbot (monitor shell)..."
 bash "${SCRIPTS_DIR}/cronbot-launcher.sh"
 
+# Degenbot
+log "Iniciando degenbot (Opus 4.6)..."
+bash "${SCRIPTS_DIR}/degenbot-launcher.sh"
+
 sleep 2
 log "=== Sessões ativas ==="
 /usr/bin/tmux list-sessions 2>/dev/null || echo "Nenhuma sessão tmux ativa"
