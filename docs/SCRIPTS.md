@@ -76,7 +76,6 @@ scripts/{nome}-launcher.sh         ← launcher executável com recovery
 | `agents-watchdog.sh` | Detecta agentes DOWN ou em loop, reinicia — lê watchdog.registry para spawnados | cron a cada 1 min | ✅ ok |
 | `cronbot-monitor.sh` | Loop shell dentro do cronbot: monitora tasks, promises, sessões (nativos + watchdog.registry) | tmux `cronbot` | ✅ ok |
 | `tmux-doctor.sh` | Auto-fix: recria mainbot se morto, aceita trust dialog, reinicia se MCP desconectou | systemd timer a cada 2 min | ✅ ok |
-| `watchdog-alerts.sh` | Drena fila de alerts pendentes e injeta no mainbot | startup do mainbot (hooks/watchdog.sh) | ✅ ok |
 
 ---
 
