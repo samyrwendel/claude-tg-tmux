@@ -147,7 +147,7 @@ function clipCamera(params = {}) {
   return new Promise((resolve, reject) => {
     const cam = params.camera || params.name || params.device || '';
     const dur = Math.min(params.duration || 5, 30);
-    const tmp = path.join(os.tmpdir(), `clawd_clip_${Date.now()}.mp4`);
+    const tmp = path.join(os.tmpdir(), `claude_clip_${Date.now()}.mp4`);
     exec(`"${ffmpeg()}" -f dshow -i video="${cam}" -t ${dur} -c:v libx264 -preset ultrafast -y "${tmp}" 2>&1`,
       { timeout: (dur + 15) * 1000, windowsHide: true }, (err) => {
         if (err && !fs.existsSync(tmp)) return reject(new Error(err.message));
@@ -161,7 +161,7 @@ function recordScreen(params = {}) {
   return new Promise((resolve, reject) => {
     const dur = Math.min(params.duration || 5, 60);
     const fps = params.fps || 15;
-    const tmp = path.join(os.tmpdir(), `clawd_screen_${Date.now()}.mp4`);
+    const tmp = path.join(os.tmpdir(), `claude_screen_${Date.now()}.mp4`);
     exec(`"${ffmpeg()}" -f gdigrab -framerate ${fps} -i desktop -t ${dur} -c:v libx264 -preset ultrafast -pix_fmt yuv420p -y "${tmp}" 2>&1`,
       { timeout: (dur + 20) * 1000, windowsHide: true }, (err) => {
         if (err && !fs.existsSync(tmp)) return reject(new Error(err.message));
@@ -248,7 +248,7 @@ function notifyWindows(title, message) {
     $xml=New-Object Windows.Data.Xml.Dom.XmlDocument;
     $xml.LoadXml('<toast><visual><binding template="ToastText02"><text id="1">${title.replace(/['"<>&]/g,'')}</text><text id="2">${message.replace(/['"<>&]/g,'')}</text></binding></visual></toast>');
     $toast=[Windows.UI.Notifications.ToastNotification]::new($xml);
-    [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('Clawd').Show($toast)
+    [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('ClaudeNode').Show($toast)
   `.replace(/\n\s*/g, '');
   exec(`powershell -Command "${ps}"`, { windowsHide: true }, (err) => {
     if (err) {
@@ -276,7 +276,7 @@ function formatA11yTree(node, depth = 0) {
 }
 
 async function ensureBrowser(params = {}) {
-  const profile  = params.profile || 'clawd';
+  const profile  = params.profile || 'claude';
   const headless = params.headless ?? config?.browser?.headless ?? false;
   if (browserCtx && currentProfile === profile) return browserCtx;
   if (browserCtx) { await browserCtx.close().catch(() => {}); browserCtx = null; browserPage = null; }
@@ -512,7 +512,7 @@ async function browserAction(action, params = {}) {
       return { ok: true };
     }
 
-    // Ação genérica (compatibilidade com clawdbot-tray)
+    // Ação genérica
     case 'act': {
       if (!browserPage) throw new Error('Sem sessão ativa');
       const type = params.type || params.kind;
@@ -557,7 +557,7 @@ function startHttpServer() {
       if (p === '/clipboard' && req.method === 'GET') return ok({ text: await clipRead() });
       if (p === '/clipboard' && req.method === 'POST') { await clipWrite(body.text || ''); return ok({ ok: true }); }
 
-      if (p === '/notify') { notifyWindows(body.title || 'Clawd', body.message || ''); return ok({ ok: true }); }
+      if (p === '/notify') { notifyWindows(body.title || 'ClaudeNode', body.message || ''); return ok({ ok: true }); }
 
       if (p === '/shell') return ok(await runCmd(body.command || '', body.timeout));
 
@@ -605,7 +605,7 @@ async function handleCommand(id, cmd, params) {
         const buf = await captureScreen('jpg');
         const dims = jpegDims(buf);
         if (buf.length > MAX_PAYLOAD) {
-          const tmp = path.join(os.tmpdir(), `clawd_ss_${Date.now()}.jpg`);
+          const tmp = path.join(os.tmpdir(), `claude_ss_${Date.now()}.jpg`);
           fs.writeFileSync(tmp, buf);
           result = { path: tmp, ...dims, size: buf.length };
         } else {
@@ -616,7 +616,7 @@ async function handleCommand(id, cmd, params) {
       case 'screen.record':
         result = await recordScreen(params);
         if (result.base64 && result.base64.length > MAX_PAYLOAD) {
-          const tmp = path.join(os.tmpdir(), `clawd_srec_${Date.now()}.mp4`);
+          const tmp = path.join(os.tmpdir(), `claude_srec_${Date.now()}.mp4`);
           fs.writeFileSync(tmp, Buffer.from(result.base64, 'base64'));
           result = { path: tmp, size: result.size, duration: result.duration };
         }
@@ -628,7 +628,7 @@ async function handleCommand(id, cmd, params) {
       case 'camera.clip':
         result = await clipCamera(params);
         if (result.base64?.length > MAX_PAYLOAD) {
-          const tmp = path.join(os.tmpdir(), `clawd_clip_${Date.now()}.mp4`);
+          const tmp = path.join(os.tmpdir(), `claude_clip_${Date.now()}.mp4`);
           fs.writeFileSync(tmp, Buffer.from(result.base64, 'base64'));
           result = { path: tmp, size: result.size, duration: result.duration };
         }
@@ -651,7 +651,7 @@ async function handleCommand(id, cmd, params) {
       case 'file.stat':   result = await fileStat(params.path); break;
 
       // ── Notificação ───────────────────────────────────────────────────────
-      case 'notify': notifyWindows(params?.title || 'Clawd', params?.message || ''); result = { ok: true }; break;
+      case 'notify': notifyWindows(params?.title || 'ClaudeNode', params?.message || ''); result = { ok: true }; break;
 
       // ── Browser ───────────────────────────────────────────────────────────
       case 'browser':
@@ -687,14 +687,14 @@ function handleMessage(raw) {
   if (msg.type === 'auth.ok') {
     connected = true; lastStatus = 'Conectado';
     log(`Autenticado: ${config.nodeId}`);
-    notifyWindows('Clawd Tray', 'Conectado ao clawd');
+    notifyWindows('ClaudeNode', 'Conectado ao servidor');
     writeStatus('connected', config.gatewayUrl);
     updateTrayStatus();
     return;
   }
   if (msg.type === 'auth.fail') {
     log('Auth rejeitada — verifique a senha');
-    notifyWindows('Clawd Tray', 'Senha incorreta');
+    notifyWindows('ClaudeNode', 'Senha incorreta');
     ws.close(); return;
   }
   if (msg.type === 'cmd') handleCommand(msg.id, msg.cmd, msg.params || {});
@@ -722,7 +722,7 @@ function connect() {
     ws.on('close', code => {
       const was = connected; connected = false; lastStatus = 'Desconectado'; updateTrayStatus();
       writeStatus('disconnected', `code ${code}`);
-      if (was) { log(`Desconectado (${code})`); notifyWindows('Clawd Tray', 'Conexão perdida'); }
+      if (was) { log(`Desconectado (${code})`); notifyWindows('ClaudeNode', 'Conexão perdida'); }
       scheduleReconnect();
     });
     ws.on('error', e => { log(`WS erro: ${e.message}`); lastStatus = 'Erro de conexão'; updateTrayStatus(); });
@@ -795,9 +795,9 @@ async function main() {
   systray = new SysTray({
     menu: {
       icon, title: '',
-      tooltip: `Clawd Tray — ${config.nodeName || config.nodeId}`,
+      tooltip: 'ClaudeNode — ${config.nodeName || config.nodeId}`,
       items: [
-        { title: `Clawd Tray — ${config.nodeName || config.nodeId}`, enabled: false },
+        { title: 'ClaudeNode — ${config.nodeName || config.nodeId}`, enabled: false },
         { title: '○ Desconectado', enabled: false },
         { title: '▶ Conectar', enabled: true },
         { title: '■ Desconectar', enabled: false },
@@ -821,7 +821,7 @@ async function main() {
         const now = await toggleStartup().catch(() => null);
         if (now !== null) {
           systray.sendAction({ type: 'update-item', seq_id: 7, item: { title: now ? '[x] Iniciar com Windows' : '[ ] Iniciar com Windows', enabled: true } });
-          notifyWindows('Clawd Tray', now ? 'Iniciará com o Windows' : 'Removido da inicialização');
+          notifyWindows('ClaudeNode', now ? 'Iniciará com o Windows' : 'Removido da inicialização');
         }
         break;
       }
@@ -836,7 +836,7 @@ async function main() {
 
   startHttpServer();
 
-  log(`Clawd Tray iniciado — ${config.nodeId} → ${config.gatewayUrl}`);
+  log('ClaudeNode iniciado — ${config.nodeId} → ${config.gatewayUrl}`);
   writeStatus('starting', config.gatewayUrl);
 
   // Recarregar config automaticamente
