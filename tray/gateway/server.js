@@ -146,7 +146,56 @@ function startHttpServer() {
         }
 
         case '/browser': {
-          const r = await sendCmd('browser', body, 30000);
+          const timeout = body.action === 'snapshot' ? 15000 : 30000;
+          const r = await sendCmd('browser', body, timeout);
+          // se snapshot retornou screenshot embutido e é grande, salvar em arquivo
+          if (r.base64) {
+            const p = `/tmp/clawd-tray/browser_${Date.now()}.jpg`;
+            fs.writeFileSync(p, Buffer.from(r.base64, 'base64'));
+            const { base64: _, ...rest } = r;
+            sendJson(200, { ...rest, path: p });
+          } else {
+            sendJson(200, r);
+          }
+          break;
+        }
+
+        // ─── File operations ────────────────────────────────────────────
+        case '/file/read': {
+          const r = await sendCmd('file.read', body, 15000);
+          sendJson(200, r);
+          break;
+        }
+
+        case '/file/write': {
+          const r = await sendCmd('file.write', body, 15000);
+          sendJson(200, r);
+          break;
+        }
+
+        case '/file/list': {
+          const dirPath = url.searchParams.get('path') || body.path;
+          const r = await sendCmd('file.list', { path: dirPath }, 10000);
+          sendJson(200, r);
+          break;
+        }
+
+        case '/file/exists': {
+          const filePath = url.searchParams.get('path') || body.path;
+          const r = await sendCmd('file.exists', { path: filePath }, 5000);
+          sendJson(200, r);
+          break;
+        }
+
+        case '/file/delete': {
+          const r = await sendCmd('file.delete', body, 10000);
+          sendJson(200, r);
+          break;
+        }
+
+        case '/file/stat': {
+          const statPath = url.searchParams.get('path') || body.path;
+          const r = await sendCmd('file.stat', { path: statPath }, 5000);
           sendJson(200, r);
           break;
         }
