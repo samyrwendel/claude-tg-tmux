@@ -39,6 +39,10 @@ bash "${SCRIPTS_DIR}/degenbot-launcher.sh"
 log "Iniciando spawnbot (Sonnet 4.6)..."
 bash "${SCRIPTS_DIR}/spawnbot-launcher.sh"
 
+# Tray Gateway
+log "Iniciando tray gateway (porta 18791)..."
+bash "${SCRIPTS_DIR}/tray-gateway.sh"
+
 # NOTA: nanobot foi removido do sistema.
 # mainbot tmux = bot Telegram principal (@mainagentebot), gerenciado pelo systemd.
 # Degenerado/OpenClaw (@mentordegenbot) = PM2 clawdbot-gw — NÃO gerenciado aqui.
