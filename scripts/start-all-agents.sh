@@ -1,6 +1,12 @@
 #!/bin/bash
-# start-all-agents.sh — inicializa todo o sistema multi-agent
-# Uso: bash start-all-agents.sh [--no-mainbot]
+# start-all-agents.sh — inicializa sub-agentes do mainbot (claude-tg-tmux)
+#
+# ARQUITETURA:
+#   mainbot tmux (@dgenmainbot)  → systemd claude-cli.service → start-claude-tmux.sh
+#   sub-agentes (devbot, etc)    → este script
+#   OpenClaw/Degenerado          → PM2 clawdbot-gw (@mentordegenbot) — NÃO gerenciado aqui
+#
+# Uso: bash start-all-agents.sh
 
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -10,10 +16,8 @@ log() { echo "[$(date '+%H:%M:%S')] $*"; }
 log "Configurando estrutura do bus..."
 bash "${SCRIPTS_DIR}/bus-setup.sh"
 
-# Mainbot (opcional — normalmente já gerenciado pelo systemd)
-if [[ "$1" != "--no-mainbot" ]]; then
-  log "Mainbot: gerenciado pelo systemd (claude-mainbot.service) — skip"
-fi
+# Mainbot: gerenciado pelo systemd (claude-cli.service) via start-claude-tmux.sh
+log "Mainbot: systemd claude-cli.service — não iniciar aqui"
 
 # Devbot
 log "Iniciando devbot (Opus 4.6)..."
