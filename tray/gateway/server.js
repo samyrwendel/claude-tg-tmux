@@ -1,4 +1,4 @@
-// clawd-tray gateway — servidor WebSocket no clawd
+// claude-node gateway — servidor WebSocket no clawd
 // Recebe conexões do tray (Windows), expõe CLI para os agentes enviarem comandos
 // Porta: 18791 (Tailscale)
 'use strict';
@@ -11,7 +11,7 @@ const readline = require('readline');
 
 const PORT      = parseInt(process.env.TRAY_PORT || '18791');
 const PASSWORD  = process.env.TRAY_PASSWORD || '';
-const LOG_DIR   = '/tmp/clawd-tray';
+const LOG_DIR   = '/tmp/claude-node';
 const CMD_PIPE  = `${LOG_DIR}/cmd.sock`;     // arquivo de comando (agentes escrevem aqui)
 const RESULT_DIR = `${LOG_DIR}/results`;     // agentes leem resultados aqui
 const LOG_FILE  = `${LOG_DIR}/gateway.log`;
@@ -86,7 +86,7 @@ function startHttpServer() {
           const r = await sendCmd('screen.capture', {}, 15000);
           if (r.base64) {
             // Salvar em arquivo e retornar path
-            const p = `/tmp/clawd-tray/screenshot_${Date.now()}.jpg`;
+            const p = `/tmp/claude-node/screenshot_${Date.now()}.jpg`;
             fs.writeFileSync(p, Buffer.from(r.base64, 'base64'));
             sendJson(200, { path: p, width: r.width, height: r.height });
           } else {
@@ -110,7 +110,7 @@ function startHttpServer() {
         case '/camera/snap': {
           const r = await sendCmd('camera.snap', body, 15000);
           if (r.base64) {
-            const p = `/tmp/clawd-tray/camera_${Date.now()}.jpg`;
+            const p = `/tmp/claude-node/camera_${Date.now()}.jpg`;
             fs.writeFileSync(p, Buffer.from(r.base64, 'base64'));
             sendJson(200, { path: p, width: r.width, height: r.height });
           } else {
@@ -150,7 +150,7 @@ function startHttpServer() {
           const r = await sendCmd('browser', body, timeout);
           // se snapshot retornou screenshot embutido e é grande, salvar em arquivo
           if (r.base64) {
-            const p = `/tmp/clawd-tray/browser_${Date.now()}.jpg`;
+            const p = `/tmp/claude-node/browser_${Date.now()}.jpg`;
             fs.writeFileSync(p, Buffer.from(r.base64, 'base64'));
             const { base64: _, ...rest } = r;
             sendJson(200, { ...rest, path: p });

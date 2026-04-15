@@ -1,5 +1,5 @@
 {
-  "name": "clawd-tray",
+  "name": "claude-node",
   "version": "1.0.0",
   "description": "Agente Windows para o sistema claude-tg-tmux — expõe browser, tela, câmera e clipboard ao clawd",
   "main": "index.js",

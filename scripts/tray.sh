@@ -1,5 +1,5 @@
 #!/bin/bash
-# tray.sh — interface dos agentes com o clawd-tray (PC do Samyr)
+# tray.sh — interface dos agentes com o claude-node (PC do Samyr)
 # Uso: tray.sh <comando> [args...]
 #
 # Comandos disponíveis:
@@ -51,7 +51,7 @@ check_gateway() {
     || err "Gateway não está rodando. Execute: bash ~/claude-tg-tmux/scripts/tray-gateway.sh"
 }
 
-mkdir -p /tmp/clawd-tray
+mkdir -p /tmp/claude-node
 
 case "$cmd" in
   status)
@@ -82,7 +82,7 @@ case "$cmd" in
     else
       b64=$(echo "$result" | python3 -c "import sys,json; print(json.load(sys.stdin).get('base64',''))" 2>/dev/null)
       if [ -n "$b64" ]; then
-        out="/tmp/clawd-tray/screen_record_${EPOCHSECONDS}.mp4"
+        out="/tmp/claude-node/screen_record_${EPOCHSECONDS}.mp4"
         echo "$b64" | base64 -d > "$out"
         echo "$out"
       else
@@ -246,7 +246,7 @@ else:
     else
       b64=$(echo "$result" | python3 -c "import sys,json; print(json.load(sys.stdin).get('base64',''))" 2>/dev/null)
       if [ -n "$b64" ]; then
-        out="/tmp/clawd-tray/browser_${EPOCHSECONDS}.jpg"
+        out="/tmp/claude-node/browser_${EPOCHSECONDS}.jpg"
         echo "$b64" | base64 -d > "$out"
         echo "$out"
       else

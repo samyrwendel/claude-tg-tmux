@@ -1,4 +1,4 @@
-// build.js — gera ClawdTray.exe para Windows
+// build.js — gera ClaudeNode.exe para Windows
 // Uso: node build.js
 'use strict';
 
@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 const DIST = path.join(__dirname, 'dist');
-const OUT  = path.join(DIST, 'ClawdTray.exe');
+const OUT  = path.join(DIST, 'ClaudeNode.exe');
 
 function run(cmd, opts = {}) {
   console.log('$', cmd);
@@ -45,11 +45,11 @@ for (const f of ['icon.ico', 'config.example.json']) {
 }
 
 // 5. Criar launchers
-fs.writeFileSync(path.join(DIST, 'ClawdTray.bat'), `@echo off\nstart "" ClawdTray.exe\n`);
-fs.writeFileSync(path.join(DIST, 'ClawdTray-debug.bat'),
-  `@echo off\ntitle Clawd Tray\nClawdTray.exe\npause\n`);
-fs.writeFileSync(path.join(DIST, 'ClawdTray.vbs'),
-  `Set WshShell = CreateObject("WScript.Shell")\nWshShell.Run """ClawdTray.exe""", 0, False\n`);
+fs.writeFileSync(path.join(DIST, 'ClaudeNode.bat'), `@echo off\nstart "" ClaudeNode.exe\n`);
+fs.writeFileSync(path.join(DIST, 'ClaudeNode-debug.bat'),
+  `@echo off\ntitle Clawd Tray\nClaudeNode.exe\npause\n`);
+fs.writeFileSync(path.join(DIST, 'ClaudeNode.vbs'),
+  `Set WshShell = CreateObject("WScript.Shell")\nWshShell.Run """ClaudeNode.exe""", 0, False\n`);
 
 // 6. Criar config.json de exemplo em dist se não existir
 const distConfig = path.join(DIST, 'config.json');
@@ -69,5 +69,5 @@ try {
 }
 
 console.log('\n✅ Build concluído!');
-console.log(`   Executável: dist/ClawdTray.exe`);
+console.log(`   Executável: dist/ClaudeNode.exe`);
 console.log(`   Edite dist/config.json antes de distribuir`);

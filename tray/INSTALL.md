@@ -1,4 +1,4 @@
-# Instalação do Clawd Tray
+# Instalação do ClaudeNode
 
 ## Lado clawd (servidor) — automático
 

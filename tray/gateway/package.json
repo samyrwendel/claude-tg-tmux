@@ -1,7 +1,7 @@
 {
-  "name": "clawd-tray-gateway",
+  "name": "claude-node-gateway",
   "version": "1.0.0",
-  "description": "Gateway WebSocket do clawd-tray (roda no servidor clawd)",
+  "description": "Gateway WebSocket do claude-node (roda no servidor clawd)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

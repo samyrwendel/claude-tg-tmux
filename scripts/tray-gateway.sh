@@ -1,12 +1,12 @@
 #!/bin/bash
-# tray-gateway.sh — inicia o gateway WebSocket do clawd-tray
+# tray-gateway.sh — inicia o gateway WebSocket do claude-node
 # Roda no servidor clawd, aguarda conexão do tray (Windows)
 
 GATEWAY_DIR="${HOME}/claude-tg-tmux/tray/gateway"
-LOG="/tmp/clawd-tray/gateway.log"
-PID_FILE="/tmp/clawd-tray/gateway.pid"
+LOG="/tmp/claude-node/gateway.log"
+PID_FILE="/tmp/claude-node/gateway.pid"
 
-mkdir -p /tmp/clawd-tray
+mkdir -p /tmp/claude-node
 
 # Carregar senha do .env
 ENV_FILE="${HOME}/claude-tg-tmux/.env"
