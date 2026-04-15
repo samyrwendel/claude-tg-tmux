@@ -187,13 +187,15 @@ fi
 info "Registrando comandos no bot Telegram..."
 curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setMyCommands" \
   -d 'commands=[
-    {"command":"help","description":"Lista os comandos"},
-    {"command":"syscheck","description":"Status do sistema e OpenClaw"},
-    {"command":"model","description":"Modelo atual"},
+    {"command":"help","description":"Lista os comandos disponíveis"},
+    {"command":"syscheck","description":"Status do mainbot e OpenClaw"},
+    {"command":"model","description":"Modelo Claude atual"},
     {"command":"tts","description":"Liga/desliga voz (on|off)"},
-    {"command":"compact","description":"Compacta o contexto"},
-    {"command":"new","description":"Nova conversa"},
-    {"command":"restart","description":"Reinicia a sessão"}
+    {"command":"compact","description":"Compacta o contexto da conversa"},
+    {"command":"new","description":"Inicia nova conversa"},
+    {"command":"restart","description":"Reinicia a sessão mainbot"},
+    {"command":"setkey","description":"Salva API key nas skills (admin)"},
+    {"command":"listkeys","description":"Lista API keys configuradas (admin)"}
   ]' | grep -q '"ok":true' && info "Comandos registrados ✓" || warn "Falha ao registrar comandos — rode manualmente depois"
 
 # ── 9. Resumo ─────────────────────────────────────────────────────────────
