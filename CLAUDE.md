@@ -5,7 +5,7 @@
 | Sistema | Bot Telegram | Processo | Config |
 |---------|-------------|----------|--------|
 | **Degenerado (OpenClaw)** | @mentordegenbot | PM2 `clawdbot-gw` | `/home/clawd/.openclaw/openclaw.json` |
-| **Mainbot (claude-tg-tmux)** | @dgenmainbot | tmux `mainbot` | `/home/clawd/.claude/channels/telegram/.env` |
+| **Mainbot (claude-tg-tmux)** | @mainagentebot | tmux `mainbot` | `/home/clawd/.claude/channels/telegram/.env` |
 
 **Regra:** nunca tocar no OpenClaw/clawdbot-gw. Qualquer trabalho de bot é no mainbot.
 
@@ -14,7 +14,7 @@
 ```
 systemd boot
   └── claude-cli.service
-        └── start-claude-tmux.sh → claude-watchdog.sh → tmux mainbot (@dgenmainbot)
+        └── start-claude-tmux.sh → claude-watchdog.sh → tmux mainbot (@mainagentebot)
 
   └── (manual) scripts/start-all-agents.sh
         ├── devbot   (Opus 4.6)
@@ -40,7 +40,7 @@ PM2 (separado — NÃO TOCAR)
 
 ### Tokens
 
-- @dgenmainbot: `TELEGRAM_BOT_TOKEN` em `/home/clawd/.claude/channels/telegram/.env`
+- @mainagentebot: `TELEGRAM_BOT_TOKEN` em `/home/clawd/.claude/channels/telegram/.env`
 - @mentordegenbot: `botToken` em `/home/clawd/.openclaw/openclaw.json` — **não expor**
 
 ### Skills instaladas
