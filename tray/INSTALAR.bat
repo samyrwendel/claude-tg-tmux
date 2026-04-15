@@ -46,36 +46,42 @@ echo.
 echo  [3/3] Configuracao
 echo  ==========================================
 echo.
+echo  Informe os dados do servidor ClaudeNode:
+echo.
 
-set /p GATEWAY_HOST=  Host do servidor (ex: 100.66.236.96):
-set /p GATEWAY_PORT=  Porta (padrao 18791, Enter para manter):
+set /p GATEWAY_HOST=  Host (IP do servidor):
+set /p GATEWAY_PORT=  Porta [18791]:
 set /p SENHA=         Senha:
-set /p NODE_NAME=     Nome deste PC (ex: PC do Samyr):
+set /p NODE_NAME=     Nome deste PC [Meu PC]:
 
-:: Porta padrao
+:: Valores padrao
 if "%GATEWAY_PORT%"=="" set GATEWAY_PORT=18791
+if "%NODE_NAME%"=="" set NODE_NAME=Meu PC
 
-:: Nome padrao
-if "%NODE_NAME%"=="" set NODE_NAME=PC Windows
+:: Gerar config.json linha a linha (sem depender de escapes complexos)
+(
+echo {
+echo   "nodeId": "windows-pc",
+echo   "nodeName": "%NODE_NAME%",
+echo   "gatewayUrl": "ws://%GATEWAY_HOST%:%GATEWAY_PORT%",
+echo   "password": "%SENHA%",
+echo   "browser": {
+echo     "executablePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+echo     "headless": false,
+echo     "viewport": { "width": 1920, "height": 1080 }
+echo   },
+echo   "reconnectInterval": 5000
+echo }
+) > config.json
 
-:: Gerar config.json via node (evita problemas de escape no bat)
-node -e "
-var fs = require('fs');
-var cfg = {
-  nodeId: 'windows-pc',
-  nodeName: '%NODE_NAME%',
-  gatewayUrl: 'ws://%GATEWAY_HOST%:%GATEWAY_PORT%',
-  password: '%SENHA%',
-  browser: {
-    executablePath: 'C:\\\\Program Files\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe',
-    headless: false,
-    viewport: { width: 1920, height: 1080 }
-  },
-  reconnectInterval: 5000
-};
-fs.writeFileSync('config.json', JSON.stringify(cfg, null, 2));
-console.log('  [OK] config.json gerado');
-"
+if exist config.json (
+    echo.
+    echo  [OK] config.json gerado com sucesso
+) else (
+    echo  [ERRO] Falha ao gerar config.json
+    pause
+    exit /b 1
+)
 
 echo.
 echo  ==========================================
@@ -83,9 +89,9 @@ echo       Instalacao concluida!
 echo  ==========================================
 echo.
 echo  Configurado:
-echo    Host:  %GATEWAY_HOST%:%GATEWAY_PORT%
-echo    Node:  %NODE_NAME%
+echo    Servidor: %GATEWAY_HOST%:%GATEWAY_PORT%
+echo    Nome:     %NODE_NAME%
 echo.
-echo  Para conectar execute: INICIAR.bat
+echo  Execute INICIAR.bat para conectar.
 echo.
 pause

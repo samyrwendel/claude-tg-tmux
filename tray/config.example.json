@@ -1,16 +1,12 @@
 {
   "nodeId": "windows-pc",
-  "nodeName": "PC do Samyr",
-
-  "gatewayUrl": "ws://100.66.236.96:18791",
-
-  "password": "COLOQUE_A_SENHA_AQUI",
-
+  "nodeName": "Meu PC",
+  "gatewayUrl": "ws://SEU_IP_AQUI:18791",
+  "password": "SUA_SENHA_AQUI",
   "browser": {
     "executablePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
     "headless": false,
     "viewport": { "width": 1920, "height": 1080 }
   },
-
   "reconnectInterval": 5000
 }
