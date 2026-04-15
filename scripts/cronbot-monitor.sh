@@ -24,14 +24,18 @@ log() {
   fi
 }
 
+ALERT_DIR="/tmp/cronbot/alerts"
+mkdir -p "$ALERT_DIR"
+
 inject_mainbot() {
   local msg="$1"
-  if /usr/bin/tmux has-session -t "$MAINBOT" 2>/dev/null; then
-    /usr/bin/tmux send-keys -t "$MAINBOT" "$msg" Enter
-    log "INJECT → mainbot: $msg"
-  else
-    log "WARN: mainbot não encontrado — não pôde injetar: $msg"
-  fi
+  # Escreve em arquivo de alerta — NÃO usa tmux send-keys (misturaria com input do Samyr)
+  # O hook cronbot-alerts.sh drena esses arquivos no contexto do Claude via UserPromptSubmit
+  local ts
+  ts=$(TZ=America/Manaus date '+%Y%m%d-%H%M%S')
+  local alertfile="${ALERT_DIR}/${ts}-$$.alert"
+  echo "$msg" > "$alertfile"
+  log "ALERT → ${alertfile}: $msg"
 }
 
 check_new_notifications() {
