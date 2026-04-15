@@ -6,7 +6,7 @@
 BUS_DIR="${HOME}/.claude/bus"
 MAINBOT="mainbot"
 LOG="/tmp/cronbot-monitor.log"
-TASK_TIMEOUT=300       # 5 minutos sem update = travado
+TASK_TIMEOUT=1800      # 30 minutos sem update = travado (tasks de código levam tempo)
 PROMISE_CHECK=900      # checar promises a cada 15min
 CRON_CHECK=3600        # checar crontab a cada 1h
 SESSIONS_TO_WATCH="devbot execbot degenbot spawnbot"
@@ -66,18 +66,35 @@ check_tasks() {
       LOCK_AGE=$((now - $(stat -c %Y "$LOCK_FILE" 2>/dev/null || echo $now)))
       if [ "$LOCK_AGE" -gt "$TASK_TIMEOUT" ]; then
         AGENT=$(grep "^AGENT:" "$task_file" | cut -d' ' -f2)
-        TAREFA=$(grep "^TAREFA:" "$task_file" | cut -d' ' -f2-)
-        # Marcar como FAILED automaticamente após timeout
+        TAREFA=$(grep "^TAREFA:" "$task_file" | cut -d' ' -f2- | cut -c1-80)
+
+        # Se agente ainda está online e trabalhando, só alertar — não marcar FAILED
+        AGENT_SESSION="${AGENT}bot"
+        [[ "$AGENT" == *bot ]] && AGENT_SESSION="$AGENT"
+        PANE_CONTENT=$(/usr/bin/tmux capture-pane -t "$AGENT_SESSION" -p 2>/dev/null | tail -3)
+        if /usr/bin/tmux has-session -t "$AGENT_SESSION" 2>/dev/null && \
+           echo "$PANE_CONTENT" | grep -qiE "thinking|tokens|✢|⏵|Baked|Working|Processing|◀▶|Razzle|Shenanigating"; then
+          # Agente vivo e trabalhando — só avisar se passou de 2x o timeout
+          if [ "$LOCK_AGE" -gt $((TASK_TIMEOUT * 2)) ]; then
+            inject_mainbot "[CRONBOT] ⚠️ Task ${TASK_ID} em andamento há $((LOCK_AGE/60))min. Agente ${AGENT_SESSION} ainda trabalhando."
+            log "Task ${TASK_ID} ainda em andamento após ${LOCK_AGE}s (agente ativo)"
+            # Atualizar timestamp do lock para não spammar
+            touch "$LOCK_FILE"
+          fi
+          continue
+        fi
+
+        # Agente offline ou idle sem ter concluído = FAILED real
         mkdir -p "${BUS_DIR}/status"
         cat > "$STATUS_FILE" << STATUSEOF
 STATUS: FAILED
-RESUMO: Timeout após ${LOCK_AGE}s sem resposta do agente
+RESUMO: Timeout após $((LOCK_AGE/60))min — agente não respondeu
 COMMIT: -
-DETALHES: Lock criado mas agente não finalizou dentro de ${TASK_TIMEOUT}s
+DETALHES: Lock criado mas agente (${AGENT_SESSION}) não finalizou em ${TASK_TIMEOUT}s
 STATUSEOF
         rm -f "$LOCK_FILE"
-        inject_mainbot "[CRONBOT] ❌ Task ${TASK_ID} marcada FAILED por timeout (${LOCK_AGE}s). Agente: ${AGENT}. Tarefa: ${TAREFA}"
-        log "Task ${TASK_ID} marcada FAILED por timeout (${LOCK_AGE}s)"
+        inject_mainbot "[CRONBOT] ❌ Task ${TASK_ID} FAILED por timeout ($((LOCK_AGE/60))min, agente offline). ${TAREFA}"
+        log "Task ${TASK_ID} marcada FAILED por timeout (${LOCK_AGE}s, agente offline/idle)"
       fi
       continue
     fi
@@ -89,33 +106,83 @@ STATUSEOF
       COMMIT=$(grep "^COMMIT:" "$STATUS_FILE" | cut -d' ' -f2-)
       AGENT=$(grep "^AGENT:" "$task_file" | cut -d' ' -f2)
 
-      if [ "$STATUS" = "DONE" ]; then
-        MSG="[${AGENT^^}BOT] Task ${TASK_ID} CONCLUÍDA. ${RESUMO}"
-        [ -n "$COMMIT" ] && [ "$COMMIT" != "-" ] && MSG="${MSG} (commit: ${COMMIT})"
-        inject_mainbot "$MSG"
-      elif [ "$STATUS" = "FAILED" ]; then
-        inject_mainbot "[${AGENT^^}BOT] ❌ Task ${TASK_ID} FALHOU: ${RESUMO}"
+      # Dedupe: só notificar se ainda não foi notificado
+      NOTIFIED_FLAG="${BUS_DIR}/status/${TASK_ID}.notified"
+      if [ ! -f "$NOTIFIED_FLAG" ]; then
+        if [ "$STATUS" = "DONE" ]; then
+          MSG="[${AGENT^^}BOT] ✅ Task ${TASK_ID} CONCLUÍDA. ${RESUMO}"
+          [ -n "$COMMIT" ] && [ "$COMMIT" != "-" ] && MSG="${MSG} (commit: ${COMMIT})"
+          inject_mainbot "$MSG"
+        elif [ "$STATUS" = "FAILED" ]; then
+          inject_mainbot "[CRONBOT] ❌ Task ${TASK_ID} FALHOU: ${RESUMO}"
+        fi
+        touch "$NOTIFIED_FLAG"
+        log "Notificação enviada: ${TASK_ID} → ${STATUS}"
       fi
 
       # Cleanup após notificar
-      rm -f "$task_file" "$LOCK_FILE" "$STATUS_FILE"
+      rm -f "$task_file" "$LOCK_FILE" "$STATUS_FILE" "$NOTIFIED_FLAG"
       log "Cleanup após notificação: ${TASK_ID}"
     fi
   done
 }
 
 check_promises() {
+  local found=0
+
+  # ── 1. bus/promises/*.promise (sistema formal) ────────────────────────────
   local results
   results=$(bash "${HOME}/claude-tg-tmux/scripts/bus-promise.sh" check 2>/dev/null)
-  [ "$results" = "OK" ] || [ -z "$results" ] && return
+  if [ -n "$results" ] && [ "$results" != "OK" ]; then
+    while IFS='|' read -r tipo slug deadline contexto; do
+      [ -z "$tipo" ] && continue
+      if [ "$tipo" = "VENCIDA" ]; then
+        inject_mainbot "[CRONBOT] 🔴 Promise VENCIDA: '${contexto}' (era ${deadline}). Avisar Samyr."
+        found=1
+      elif [ "$tipo" = "URGENTE" ]; then
+        inject_mainbot "[CRONBOT] ⏰ Promise urgente em < 24h: '${contexto}' (vence ${deadline})."
+        found=1
+      fi
+    done <<< "$results"
+  fi
 
-  while IFS='|' read -r tipo slug deadline contexto; do
-    if [ "$tipo" = "VENCIDA" ]; then
-      inject_mainbot "[CRONBOT] 🔴 Promise VENCIDA: '${contexto}' (era ${deadline}). Avisar Samyr."
-    elif [ "$tipo" = "URGENTE" ]; then
-      inject_mainbot "[CRONBOT] ⏰ Promise urgente em < 24h: '${contexto}' (vence ${deadline})."
+  # ── 2. memory/promises.md (promessas conversacionais do mainbot) ──────────
+  local PROMISES_MD="${HOME}/.claude/projects/-home-clawd/memory/promises.md"
+  if [ ! -f "$PROMISES_MD" ]; then return; fi
+
+  local now_ts
+  now_ts=$(date +%s)
+  local limit_24h=$((now_ts + 86400))
+  local today
+  today=$(TZ=America/Manaus date '+%Y-%m-%d')
+
+  # Formato: - [ ] YYYY-MM-DD | prazo: YYYY-MM-DD | descrição | contexto
+  while IFS= read -r line; do
+    # Só linhas abertas (- [ ])
+    [[ "$line" =~ ^\-\ \[\ \] ]] || continue
+
+    # Extrair prazo
+    local prazo
+    prazo=$(echo "$line" | grep -oP 'prazo:\s*\K[\d-]+')
+    [ -z "$prazo" ] && continue
+
+    local prazo_ts
+    prazo_ts=$(date -d "$prazo" +%s 2>/dev/null) || continue
+
+    # Extrair descrição (3º campo após |)
+    local descricao
+    descricao=$(echo "$line" | awk -F'|' '{gsub(/^[[:space:]]+|[[:space:]]+$/, "", $3); print $3}')
+
+    if [ "$prazo_ts" -lt "$now_ts" ]; then
+      inject_mainbot "[CRONBOT] 🔴 Promessa VENCIDA em promises.md: '${descricao}' (era ${prazo}). Cumprir ou cancelar."
+      found=1
+    elif [ "$prazo_ts" -lt "$limit_24h" ]; then
+      inject_mainbot "[CRONBOT] ⏰ Promessa urgente em promises.md: '${descricao}' (vence ${prazo})."
+      found=1
     fi
-  done <<< "$results"
+  done < "$PROMISES_MD"
+
+  [ "$found" -eq 0 ] && log "check_promises: nenhuma urgência"
 }
 
 check_sessions() {
