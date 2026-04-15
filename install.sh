@@ -130,6 +130,15 @@ sed "s|%h/claude-tg-tmux|$SCRIPT_DIR|g" \
 
 cp "$SCRIPT_DIR/systemd/agents-boot.service" "$SYSTEMD_USER/agents-boot.service"
 
+# tmux-doctor (auto-fix mainbot)
+cp "$SCRIPT_DIR/systemd/tmux-doctor.service" "$SYSTEMD_USER/tmux-doctor.service"
+cp "$SCRIPT_DIR/systemd/tmux-doctor.timer"   "$SYSTEMD_USER/tmux-doctor.timer"
+
+# tmux-doctor script
+mkdir -p "$HOME/.local/bin"
+cp "$SCRIPT_DIR/scripts/tmux-doctor.sh" "$HOME/.local/bin/tmux-doctor.sh"
+chmod +x "$HOME/.local/bin/tmux-doctor.sh"
+
 # Criar dirs do bus
 mkdir -p "$HOME/.claude/bus/tasks" "$HOME/.claude/bus/status" "$HOME/.claude/bus/promises"
 chmod +x "$SCRIPT_DIR"/scripts/*.sh
@@ -137,9 +146,20 @@ chmod +x "$SCRIPT_DIR"/scripts/*.sh
 # Injetar .env no serviço
 sed -i "/\[Service\]/a EnvironmentFile=$SCRIPT_DIR/.env" "$SYSTEMD_USER/mainbot.service"
 
+# ── 7b. Skills ─────────────────────────────────────────────────────────────
+if [ -d "$SCRIPT_DIR/skills" ]; then
+    info "Instalando skills em $CLAUDE_CONFIG/skills/..."
+    mkdir -p "$CLAUDE_CONFIG/skills"
+    for skill_dir in "$SCRIPT_DIR/skills"/*/; do
+        skill_name=$(basename "$skill_dir")
+        cp -r "$skill_dir" "$CLAUDE_CONFIG/skills/$skill_name"
+        info "  skill: $skill_name"
+    done
+fi
+
 systemctl --user daemon-reload
-systemctl --user enable mainbot.service agents-boot.service
-systemctl --user start mainbot.service agents-boot.service
+systemctl --user enable mainbot.service agents-boot.service tmux-doctor.timer
+systemctl --user start mainbot.service agents-boot.service tmux-doctor.timer
 
 sleep 3
 STATUS=$(systemctl --user is-active mainbot.service)
@@ -154,6 +174,13 @@ if [ "$STATUS_AGENTS" = "active" ]; then
     info "agents-boot.service ativo ✓ (devbot, execbot, cronbot)"
 else
     warn "agents-boot.service status: $STATUS_AGENTS — verifique: journalctl --user -u agents-boot -n 20"
+fi
+
+STATUS_DOCTOR=$(systemctl --user is-active tmux-doctor.timer)
+if [ "$STATUS_DOCTOR" = "active" ]; then
+    info "tmux-doctor.timer ativo ✓ (auto-fix mainbot a cada 2min)"
+else
+    warn "tmux-doctor.timer status: $STATUS_DOCTOR"
 fi
 
 # ── 8. Registrar comandos no bot Telegram ────────────────────────────────

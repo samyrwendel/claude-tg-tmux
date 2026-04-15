@@ -1,0 +1,8 @@
+[Unit]
+Description=Mainbot tmux doctor — auto-fix trust dialog e MCP desconectado
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/tmux-doctor.sh
+Environment=TMUX=
+EnvironmentFile=-%h/claude-tg-tmux/.env

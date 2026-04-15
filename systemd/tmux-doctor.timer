@@ -1,0 +1,10 @@
+[Unit]
+Description=Mainbot tmux doctor — roda a cada 2min
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=2min
+AccuracySec=30
+
+[Install]
+WantedBy=timers.target
