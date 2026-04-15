@@ -1,0 +1,1 @@
+/home/clawd/.claude/skills/gstack/browse/SKILL.md
