@@ -23,7 +23,9 @@ trap cleanup EXIT TERM INT
 /usr/bin/tmux kill-session -t "$SESSION_NAME" 2>/dev/null
 
 /usr/bin/tmux new-session -d -s "$SESSION_NAME" -c "${WORKSPACE:-$HOME}" \
-    "$CLAUDE_BIN --channels plugin:telegram@claude-plugins-official --permission-mode bypassPermissions --dangerously-skip-permissions"
+    "$CLAUDE_BIN" --channels "plugin:telegram@claude-plugins-official" \
+    --permission-mode bypassPermissions --dangerously-skip-permissions \
+    --add-dir /home/clawd/.claude/agents/mainbot
 
 sleep 5
 /usr/bin/tmux send-keys -t "$SESSION_NAME" Enter 2>/dev/null

@@ -1,5 +1,5 @@
 [Unit]
-Description=Mainbot — Claude CLI Telegram (@dgenmainbot)
+Description=Mainbot — Claude CLI Telegram (@mainagentebot)
 After=network-online.target
 Wants=network-online.target
 OnFailure=mainbot-failure-notify.service

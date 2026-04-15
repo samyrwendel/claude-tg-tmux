@@ -128,10 +128,9 @@ except:
 " 2>/dev/null)
 
     tg_send "$(cat <<MSG
-*Status — $(date '+%d/%m %H:%M')*
+*Syscheck — $(date '+%d/%m %H:%M')*
 
-*Nanobot*
-Heartbeat: ${DIFF}s atrás
+*Mainbot (@mainagentebot)*
 TTS: ${TTS_STATUS}
 
 *OpenClaw Gateway*
@@ -162,7 +161,9 @@ MSG
     ;;
 
   /compact)
-    exit 0
+    tg_send "Compactando contexto..."
+    tmux send-keys -t mainbot "/compact" Enter
+    echo '{"decision":"block","reason":"Command handled"}'
     ;;
 
   /new)

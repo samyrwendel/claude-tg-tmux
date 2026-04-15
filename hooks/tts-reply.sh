@@ -6,8 +6,10 @@
 TEXT="$1"
 if [ -z "$TEXT" ]; then exit 1; fi
 
-ELEVENLABS_KEY="sk_f072918db49a1aed2e529d81351ea7adf26e19bf55ca6d21"
-VOICE_ID="30D0RicpFBZ55TdpseEa"
+ENV_FILE="$(dirname "$0")/../.env"
+[ -f "$ENV_FILE" ] && source "$ENV_FILE"
+ELEVENLABS_KEY="${ELEVENLABS_API_KEY}"
+VOICE_ID="${ELEVENLABS_VOICE_ID:-30D0RicpFBZ55TdpseEa}"
 MODEL="eleven_v3"
 OUTFILE="/tmp/tts-reply-$(date +%s).mp3"
 

@@ -7,7 +7,7 @@ DONE_FLAG="/tmp/dream-cycle-done"
 PID_FILE="/tmp/dream-cycle-pid"
 INSIGHTS_FILE="$HOME/.claude/projects/-home-clawd/memory/dream-insights.md"
 TOKEN=$(grep TELEGRAM_BOT_TOKEN ~/.claude/channels/telegram/.env 2>/dev/null | cut -d= -f2)
-CHAT_ID="30289486"
+CHAT_ID="${ADMIN_CHAT_ID:-30289486}"
 
 # Só entrega se o dream rodou e concluiu
 if [ ! -f "$DONE_FLAG" ]; then

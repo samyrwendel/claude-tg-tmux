@@ -1,6 +1,6 @@
 #!/bin/bash
 # mainbot-launcher.sh — inicia sessão tmux mainbot (claude-tg-tmux)
-# Bot: @dgenmainbot | Plugin: plugin:telegram@claude-plugins-official
+# Bot: @mainagentebot | Plugin: plugin:telegram@claude-plugins-official
 # NÃO confundir com Degenerado/OpenClaw (@mentordegenbot, PM2 clawdbot-gw)
 
 SESSION_NAME="mainbot"

@@ -2,7 +2,7 @@
 # start-all-agents.sh — inicializa sub-agentes do mainbot (claude-tg-tmux)
 #
 # ARQUITETURA:
-#   mainbot tmux (@dgenmainbot)  → systemd claude-cli.service → start-claude-tmux.sh
+#   mainbot tmux (@mainagentebot)  → systemd claude-cli.service → start-claude-tmux.sh
 #   sub-agentes (devbot, etc)    → este script
 #   OpenClaw/Degenerado          → PM2 clawdbot-gw (@mentordegenbot) — NÃO gerenciado aqui
 #
@@ -40,7 +40,7 @@ log "Iniciando spawnbot (Sonnet 4.6)..."
 bash "${SCRIPTS_DIR}/spawnbot-launcher.sh"
 
 # NOTA: nanobot foi removido do sistema.
-# mainbot tmux = bot Telegram principal (@dgenmainbot), gerenciado pelo systemd.
+# mainbot tmux = bot Telegram principal (@mainagentebot), gerenciado pelo systemd.
 # Degenerado/OpenClaw (@mentordegenbot) = PM2 clawdbot-gw — NÃO gerenciado aqui.
 
 sleep 2

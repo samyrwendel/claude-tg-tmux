@@ -13,8 +13,10 @@ if [ -z "$CHAT_ID" ] || [ -z "$TEXT" ]; then
 fi
 
 TOKEN=$(grep TELEGRAM_BOT_TOKEN ~/.claude/channels/telegram/.env 2>/dev/null | cut -d= -f2)
-ELEVENLABS_KEY="sk_f072918db49a1aed2e529d81351ea7adf26e19bf55ca6d21"
-VOICE_ID="30D0RicpFBZ55TdpseEa"
+ENV_FILE="$(dirname "$0")/../.env"
+[ -f "$ENV_FILE" ] && source "$ENV_FILE"
+ELEVENLABS_KEY="${ELEVENLABS_API_KEY}"
+VOICE_ID="${ELEVENLABS_VOICE_ID:-30D0RicpFBZ55TdpseEa}"
 MODEL="eleven_v3"
 TS=$(date +%s)
 

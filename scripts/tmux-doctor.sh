@@ -1,6 +1,6 @@
 #!/bin/bash
 # tmux-doctor.sh — Diagnóstico e auto-fix da sessão mainbot (Claude TG)
-# Sistema: claude-tg-tmux / mainbot tmux (@dgenmainbot)
+# Sistema: claude-tg-tmux / mainbot tmux (@mainagentebot)
 # NÃO confundir com OpenClaw/Degenerado (@mentordegenbot, PM2 clawdbot-gw)
 #
 # Problemas tratados:
@@ -15,7 +15,7 @@ CLAUDE_ARGS="--channels plugin:telegram@claude-plugins-official --permission-mod
 MAINBOT_LAUNCHER="/home/clawd/claude-tg-tmux/scripts/mainbot-launcher.sh"
 WORKDIR="/home/clawd"
 BOT_TOKEN="${TELEGRAM_BOT_TOKEN}"
-CHAT_ID="30289486"
+CHAT_ID="${ADMIN_CHAT_ID:-30289486}"
 LOCK_FILE="/tmp/tmux-doctor.lock"
 COOLDOWN=120  # 2min entre ações
 LOG="/tmp/tmux-doctor.log"

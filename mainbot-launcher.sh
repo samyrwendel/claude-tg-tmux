@@ -1,5 +1,5 @@
 #!/bin/bash
-# mainbot-launcher.sh — inicia sessão tmux mainbot (@dgenmainbot)
+# mainbot-launcher.sh — inicia sessão tmux mainbot (@mainagentebot)
 # Manages Claude CLI in tmux, monitors health, exits on failure → systemd restarts
 
 SESSION_NAME="mainbot"
