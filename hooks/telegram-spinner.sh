@@ -2,7 +2,7 @@
 # Spinner animado no Telegram — roda em background trocando emoji da mensagem
 # Uso: telegram-spinner.sh start "texto" | telegram-spinner.sh stop
 
-BOT_TOKEN="8554223539:AAH76RDACgK6Bn3z4AFJR5wHR0k5j1f6OHI"
+BOT_TOKEN="8620058557:AAEUzCZ9AykBfzdzSAPJRGwVzot2FLrXVaE"
 CHAT_ID="30289486"
 PID_FILE="/tmp/telegram-spinner.pid"
 MSG_FILE="/tmp/telegram-spinner-msgid"
