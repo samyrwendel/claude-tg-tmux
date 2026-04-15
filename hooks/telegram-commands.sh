@@ -38,53 +38,102 @@ tg_send() {
 
 CMD=$(echo "$TEXT" | awk '{print $1}' | tr '[:upper:]' '[:lower:]')
 
+# Agentes do mainbot e seus emojis
+agent_status() {
+  local name="$1" emoji="$2"
+  tmux has-session -t "$name" 2>/dev/null && echo "${emoji} ${name} — ✅" || echo "${emoji} ${name} — ❌"
+}
+
 case "$CMD" in
+  /stat|/status)
+    TTS_STATUS="on"; [ -f /tmp/claude-tts-disabled ] && TTS_STATUS="off"
+
+    # Agentes tmux do mainbot
+    A_MAINBOT=$(agent_status mainbot "🧠")
+    A_DEVBOT=$(agent_status devbot "💻")
+    A_EXECBOT=$(agent_status execbot "⚡")
+    A_CRONBOT=$(agent_status cronbot "⏰")
+    A_DEGENBOT=$(agent_status degenbot "🦧")
+    A_SPAWNBOT=$(agent_status spawnbot "🔁")
+
+    # PM2
+    PM2_GW=$(pm2 list 2>/dev/null | grep "clawdbot-gw" | awk '{print $10}')
+    OC_STATUS="❌ offline"; [ "$PM2_GW" = "online" ] && OC_STATUS="✅ online"
+
+    tg_send "$(cat <<MSG
+*Status — $(TZ=America/Manaus date '+%d/%m %H:%M')*
+
+*Agentes Mainbot (@mainagentebot)*
+${A_MAINBOT}
+${A_DEVBOT}
+${A_EXECBOT}
+${A_CRONBOT}
+${A_DEGENBOT}
+${A_SPAWNBOT}
+
+TTS: ${TTS_STATUS}
+
+*Degenerado (@mentordegenbot)*
+clawdbot-gw PM2: ${OC_STATUS}
+MSG
+    )"
+    echo '{"decision":"block","reason":"Command handled"}'
+    ;;
   /help)
     tg_send "$(cat <<'MSG'
 *Comandos disponíveis:*
 
-/help — esta mensagem
-/syscheck — status do sistema
-/model — modelo atual
+/stat — status dos agentes e serviços
+/syscheck — status detalhado do sistema
+/model — modelo Claude atual
 /tts on|off — ligar/desligar voz
-/compact — compactar contexto
+/compact — compactar contexto da conversa
 /new — nova conversa
-/restart — reinicia a sessão
+/restart — reinicia a sessão mainbot
 /setkey NOME VALOR — salva API key nas skills
 /listkeys — lista as keys configuradas (sem valores)
+/help — esta mensagem
 MSG
     )"
     echo '{"decision":"block","reason":"Command handled"}'
     ;;
 
   /syscheck)
+    HEARTBEAT=$(stat -c %Y /tmp/claude-heartbeat 2>/dev/null || echo 0)
+    NOW=$(date +%s)
+    DIFF=$((NOW - HEARTBEAT))
     TTS_STATUS="on"
     [ -f /tmp/claude-tts-disabled ] && TTS_STATUS="off"
 
-    # Sessão mainbot
-    MAINBOT_UP="❌ down"
-    tmux has-session -t mainbot 2>/dev/null && MAINBOT_UP="✅ up"
+    OC_HEALTH=$(curl -s --max-time 2 http://localhost:18789/health 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print('✅ live' if d.get('ok') else '❌ down')" 2>/dev/null || echo "❌ offline")
 
-    # Processo Claude no pane
-    PANE_PID=$(tmux list-panes -t mainbot -F '#{pane_pid}' 2>/dev/null)
-    CLAUDE_UP="❌ morto"
-    [ -n "$PANE_PID" ] && kill -0 "$PANE_PID" 2>/dev/null && CLAUDE_UP="✅ vivo"
-
-    # OpenClaw Gateway (PM2 clawdbot-gw — @mentordegenbot)
-    OC_STATUS=$(pm2 list 2>/dev/null | grep "clawdbot-gw" | awk '{print $10}')
-    OC_HEALTH="❌ offline"
-    [ "$OC_STATUS" = "online" ] && OC_HEALTH="✅ online"
+    OC_NOTES=$(python3 -c "
+import json, datetime
+try:
+    d = json.load(open('/home/clawd/clawd/memory/heartbeat-state.json'))
+    checks = d.get('lastChecks', {})
+    now = datetime.datetime.now().timestamp()
+    parts = []
+    for k,v in checks.items():
+        mins = int((now - v) / 60)
+        parts.append(f'{k}: {mins}m atrás')
+    print(', '.join(parts[:3]))
+except:
+    print('indisponível')
+" 2>/dev/null)
 
     tg_send "$(cat <<MSG
 *Status — $(date '+%d/%m %H:%M')*
 
-*Mainbot (@dgenmainbot)*
-Sessão tmux: ${MAINBOT_UP}
-Claude CLI: ${CLAUDE_UP}
+*Nanobot*
+Heartbeat: ${DIFF}s atrás
 TTS: ${TTS_STATUS}
 
-*Degenerado/OpenClaw (@mentordegenbot)*
-clawdbot-gw PM2: ${OC_HEALTH}
+*OpenClaw Gateway*
+Health: ${OC_HEALTH}
+Checks: ${OC_NOTES}
+
+_Tem alguma tarefa pendente que precisa ser resolvida?_
 MSG
     )"
     echo '{"decision":"block","reason":"Command handled"}'
@@ -108,9 +157,7 @@ MSG
     ;;
 
   /compact)
-    tg_send "Compactando contexto..."
-    tmux send-keys -t mainbot "/compact" Enter
-    echo '{"decision":"block","reason":"Command handled"}'
+    exit 0
     ;;
 
   /new)
@@ -120,8 +167,8 @@ MSG
     ;;
 
   /restart)
-    tg_send "Reiniciando sessão mainbot..."
-    systemctl --user restart claude-cli.service &
+    tg_send "Reiniciando sessão..."
+    sudo systemctl restart claude-watchdog.service &
     echo '{"decision":"block","reason":"Command handled"}'
     ;;
 
