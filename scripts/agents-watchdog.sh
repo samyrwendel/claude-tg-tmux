@@ -46,7 +46,15 @@ EOF
   log "Task state saved for $agent"
 }
 
-AGENTS="mainbot devbot execbot cronbot degenbot"
+WATCHDOG_REGISTRY="${HOME}/.claude/bus/watchdog.registry"
+
+# Agentes nativos + agentes spawnados dinamicamente
+NATIVE_AGENTS="mainbot devbot execbot cronbot degenbot"
+SPAWNED_AGENTS=""
+if [ -f "$WATCHDOG_REGISTRY" ]; then
+  SPAWNED_AGENTS=$(grep -v '^#' "$WATCHDOG_REGISTRY" 2>/dev/null | tr '\n' ' ')
+fi
+AGENTS="${NATIVE_AGENTS} ${SPAWNED_AGENTS}"
 
 for agent in $AGENTS; do
   if ! tmux has-session -t "$agent" 2>/dev/null; then
@@ -69,9 +77,19 @@ for agent in $AGENTS; do
         bash "${SCRIPTS_DIR}/cronbot-launcher.sh" 2>/dev/null &
         notify_mainbot "$agent went DOWN. Task state saved. Restarting."
         ;;
-      degenbot) 
+      degenbot)
         bash "${SCRIPTS_DIR}/degenbot-launcher.sh" 2>/dev/null &
         notify_mainbot "$agent went DOWN. Task state saved. Restarting."
+        ;;
+      *)
+        # Agente spawnado dinamicamente — launcher gerado pelo spawnbot
+        local_launcher="${SCRIPTS_DIR}/${agent}-launcher.sh"
+        if [ -f "$local_launcher" ]; then
+          bash "$local_launcher" 2>/dev/null &
+          notify_mainbot "$agent (spawned) went DOWN. Restarting via ${agent}-launcher.sh."
+        else
+          notify_mainbot "$agent went DOWN but no launcher found — skipping restart."
+        fi
         ;;
     esac
     log "OK: $agent restarted"
@@ -120,9 +138,16 @@ for agent in $AGENTS; do
             bash "${SCRIPTS_DIR}/cronbot-launcher.sh" 2>/dev/null &
             notify_mainbot "$agent was LOOPING for ${count}s. Task state saved. Restarted."
             ;;
-          degenbot) 
+          degenbot)
             bash "${SCRIPTS_DIR}/degenbot-launcher.sh" 2>/dev/null &
             notify_mainbot "$agent was LOOPING for ${count}s. Task state saved. Restarted."
+            ;;
+          *)
+            local_launcher="${SCRIPTS_DIR}/${agent}-launcher.sh"
+            if [ -f "$local_launcher" ]; then
+              bash "$local_launcher" 2>/dev/null &
+              notify_mainbot "$agent (spawned) was LOOPING for ${count}s. Restarted."
+            fi
             ;;
         esac
         rm -f "$state_file" "$count_file"
