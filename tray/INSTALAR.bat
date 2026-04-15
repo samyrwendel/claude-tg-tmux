@@ -1,11 +1,10 @@
 @echo off
-chcp 65001 >nul
-title ClaudeNode — Instalador
+title ClaudeNode - Instalador
 
 echo.
-echo  ╔══════════════════════════════════════╗
-echo  ║        ClaudeNode — Instalador       ║
-echo  ╚══════════════════════════════════════╝
+echo  ==========================================
+echo       ClaudeNode - Instalador
+echo  ==========================================
 echo.
 
 :: Verificar Node.js
@@ -53,19 +52,22 @@ if not exist config.json (
 )
 
 echo.
-echo  ╔══════════════════════════════════════╗
-echo  ║         Instalacao concluida!        ║
-echo  ╚══════════════════════════════════════╝
+echo  ==========================================
+echo       Instalacao concluida!
+echo  ==========================================
 echo.
 echo  Proximo passo:
-echo    1. Abra o arquivo config.json
-echo    2. Configure a senha (password)
-echo    3. Confirme o gatewayUrl: ws://100.66.236.96:18791
-echo    4. Salve e execute: INICIAR.bat
+echo    1. O config.json vai abrir no Bloco de Notas
+echo    2. Troque COLOQUE_A_SENHA_AQUI pela senha combinada
+echo    3. Ajuste o caminho do Chrome se necessario
+echo    4. Salve (Ctrl+S) e feche
+echo    5. Execute INICIAR.bat para conectar
+echo.
+echo  SENHA: pergunte ao Samyr qual senha foi configurada no servidor.
 echo.
 
 :: Abrir config.json para editar
-echo  Abrindo config.json para configurar...
+echo  Abrindo config.json...
 timeout /t 2 >nul
 notepad config.json
 
