@@ -10,7 +10,7 @@ fi
 
 bash "$(dirname "$0")/spawnbot.sh" create degenbot \
   "Degen 🦧 — Crypto, DeFi, Polymarket. Usa skills: polymarket, krystal, pools, lp-monitor. Responde só resultado, sem narração." \
-  opus
+  opus /home/clawd/mainbot-degen
 
 echo "[degenbot-launcher] Sessão '$SESSION' iniciada (Opus 4.6)"
 

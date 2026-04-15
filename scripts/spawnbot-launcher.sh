@@ -4,7 +4,7 @@
 SESSION="spawnbot"
 CLAUDE_BIN="/home/clawd/.npm-global/bin/claude"
 AGENT_DIR="${HOME}/.claude/agents/spawnbot"
-WORK_DIR="/home/clawd"
+WORK_DIR="/home/clawd/mainbot-spawn"
 
 export HOME="/home/clawd"
 export PATH="/home/clawd/.npm-global/bin:/home/clawd/.local/bin:/usr/local/bin:/usr/bin:/bin"
@@ -13,7 +13,7 @@ export PATH="/home/clawd/.npm-global/bin:/home/clawd/.local/bin:/usr/local/bin:/
 /usr/bin/tmux kill-session -t "$SESSION" 2>/dev/null
 
 /usr/bin/tmux new-session -d -s "$SESSION" -c "$WORK_DIR" \
-  "$CLAUDE_BIN" --model claude-sonnet-4-6 --dangerously-skip-permissions --add-dir "$AGENT_DIR"
+  "$CLAUDE_BIN" --model claude-sonnet-4-6 --dangerously-skip-permissions --add-dir "$AGENT_DIR" --add-dir "/home/clawd/mainbot-spawn"
 
 sleep 3
 /usr/bin/tmux send-keys -t "$SESSION" Enter 2>/dev/null

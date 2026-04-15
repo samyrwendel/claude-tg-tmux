@@ -4,7 +4,7 @@
 SESSION="devbot"
 CLAUDE_BIN="/home/clawd/.npm-global/bin/claude"
 AGENT_DIR="${HOME}/.claude/agents/devbot"
-WORK_DIR="/home/clawd"
+WORK_DIR="/home/clawd/mainbot-dev"
 TASK_DIR="/tmp/watchdog/tasks"
 
 export HOME="/home/clawd"
@@ -15,7 +15,7 @@ export CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1
 /usr/bin/tmux kill-session -t "$SESSION" 2>/dev/null
 
 /usr/bin/tmux new-session -d -s "$SESSION" -c "$WORK_DIR" \
-  "$CLAUDE_BIN" --model claude-opus-4-6 --dangerously-skip-permissions --add-dir "$AGENT_DIR"
+  "$CLAUDE_BIN" --model claude-opus-4-6 --dangerously-skip-permissions --add-dir "$AGENT_DIR" --add-dir "/home/clawd/mainbot-dev"
 
 sleep 3
 /usr/bin/tmux send-keys -t "$SESSION" Enter 2>/dev/null
