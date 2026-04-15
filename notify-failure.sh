@@ -17,7 +17,7 @@ CHAT_ID="${ADMIN_CHAT_ID}"
 if [ -n "$TOKEN" ] && [ -n "$CHAT_ID" ]; then
     curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
         -d chat_id="$CHAT_ID" \
-        -d text="⚠️ NanoBot caiu — systemd reiniciando. Se repetir 3x em 10min, para." \
+        -d text="⚠️ Mainbot (@dgenmainbot) caiu — systemd reiniciando. Se repetir 3x em 10min, para." \
         >/dev/null 2>&1
     touch "$COOLDOWN_FILE"
 fi

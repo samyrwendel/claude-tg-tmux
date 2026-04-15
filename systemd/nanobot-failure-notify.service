@@ -1,5 +1,5 @@
 [Unit]
-Description=NanoBot failure Telegram notification
+Description=Mainbot failure Telegram notification
 
 [Service]
 Type=oneshot

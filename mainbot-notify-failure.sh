@@ -19,7 +19,7 @@ TG_CHAT_ID="30289486"
 if [ -n "$TG_BOT_TOKEN" ]; then
     curl -s -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
         -d chat_id="$TG_CHAT_ID" \
-        -d text="⚠️ NanoBot caiu e systemd vai reiniciar. Se repetir 3x em 10min, para automaticamente." \
+        -d text="⚠️ Mainbot (@dgenmainbot) caiu — systemd reiniciando. Se repetir 3x em 10min, para automaticamente." \
         >/dev/null 2>&1
     touch "$COOLDOWN_FILE"
 fi

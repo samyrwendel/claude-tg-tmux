@@ -1,5 +1,5 @@
 [Unit]
-Description=NanoBot — Claude CLI Telegram
+Description=Mainbot — Claude CLI Telegram (@dgenmainbot)
 After=network-online.target
 Wants=network-online.target
 OnFailure=mainbot-failure-notify.service

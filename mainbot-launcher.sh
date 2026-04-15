@@ -1,5 +1,5 @@
 #!/bin/bash
-# NanoBot launcher for systemd
+# mainbot-launcher.sh — inicia sessão tmux mainbot (@dgenmainbot)
 # Manages Claude CLI in tmux, monitors health, exits on failure → systemd restarts
 
 SESSION_NAME="mainbot"
@@ -20,7 +20,9 @@ trap cleanup EXIT TERM INT
 
 # Start Claude CLI in tmux (needs PTY)
 /usr/bin/tmux new-session -d -s "$SESSION_NAME" -c "$HOME" \
-    "CLAUDE_CONFIG_DIR=${HOME}/.claude/agents/mainbot $CLAUDE_BIN --channels plugin:telegram@claude-plugins-official --permission-mode bypassPermissions --dangerously-skip-permissions"
+    "$CLAUDE_BIN" --channels "plugin:telegram@claude-plugins-official" \
+    --permission-mode bypassPermissions --dangerously-skip-permissions \
+    --add-dir /home/clawd/.claude/agents/mainbot
 
 # Auto-accept trust prompt
 sleep 5
