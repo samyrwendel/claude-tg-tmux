@@ -9,8 +9,9 @@ LOG="/tmp/cronbot-monitor.log"
 TASK_TIMEOUT=300       # 5 minutos sem update = travado
 PROMISE_CHECK=900      # checar promises a cada 15min
 CRON_CHECK=3600        # checar crontab a cada 1h
-SESSIONS_TO_WATCH="devbot execbot degenbot"
+SESSIONS_TO_WATCH="devbot execbot degenbot spawnbot"
 BUS_REGISTRY="${HOME}/.claude/bus/agents.registry"
+WATCHDOG_REGISTRY="${HOME}/.claude/bus/watchdog.registry"
 
 LOG_MAX_LINES=1000
 log() {
@@ -132,18 +133,21 @@ check_sessions() {
     fi
   done
 
-  # Agentes dinâmicos do spawnbot registry (com flock para leitura segura)
-  [ -f "$BUS_REGISTRY" ] || return
-  local registry_snapshot
-  registry_snapshot=$(flock -s "${BUS_REGISTRY}.lock" cat "$BUS_REGISTRY" 2>/dev/null)
-  while IFS='|' read -r nome modelo workspace esp criado; do
+  # Agentes spawnados — usar launcher gerado (não recriar do zero)
+  [ -f "$WATCHDOG_REGISTRY" ] || return
+  while IFS= read -r nome; do
     [ -z "$nome" ] && continue
     if ! /usr/bin/tmux has-session -t "$nome" 2>/dev/null; then
-      log "Agente dinâmico '$nome' morto — recriando via spawnbot"
-      bash "${HOME}/claude-tg-tmux/scripts/spawnbot.sh" create "$nome" "$esp" "$modelo" "$workspace" &
-      inject_mainbot "[CRONBOT] ⚠️ Agente '${nome}' estava morto — recriando (${modelo})."
+      local launcher="${HOME}/claude-tg-tmux/scripts/${nome}-launcher.sh"
+      if [ -f "$launcher" ]; then
+        log "Agente spawnado '$nome' morto — reiniciando via launcher"
+        bash "$launcher" &
+        inject_mainbot "[CRONBOT] ⚠️ Agente '${nome}' estava morto — reiniciando."
+      else
+        inject_mainbot "[CRONBOT] ⚠️ Agente '${nome}' morto e sem launcher. Verificar."
+      fi
     fi
-  done <<< "$registry_snapshot"
+  done < "$WATCHDOG_REGISTRY"
 }
 
 check_crontab() {

@@ -25,9 +25,11 @@ TASK_FILE="${BUS_DIR}/tasks/${TASK_ID}.task"
 
 # Mapear nome do agente para sessão tmux
 case "$AGENT" in
-  dev|devbot)   SESSION="devbot" ;;
-  exec|execbot) SESSION="execbot" ;;
-  degen|degenbot) SESSION="degenbot" ;;
+  dev|devbot)       SESSION="devbot" ;;
+  exec|execbot)     SESSION="execbot" ;;
+  degen|degenbot)   SESSION="degenbot" ;;
+  spawn|spawnbot)   SESSION="spawnbot" ;;
+  cron|cronbot)     SESSION="cronbot" ;;
   *)
     # Checar registry de agentes dinâmicos (spawnbot)
     REGISTRY="${HOME}/.claude/bus/agents.registry"

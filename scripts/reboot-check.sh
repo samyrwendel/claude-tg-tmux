@@ -12,34 +12,53 @@ log() {
   echo "[$(date '+%H:%M:%S')] $*" | tee -a "$REPORT_FILE"
 }
 
-AGENTS="mainbot devbot execbot cronbot degenbot"
+NATIVE_AGENTS="mainbot devbot execbot cronbot degenbot spawnbot"
+WATCHDOG_REGISTRY="${HOME}/.claude/bus/watchdog.registry"
 
 log "=== REBOOT CHECK $(date) ==="
 
 all_ok=true
 
-for agent in $AGENTS; do
+# Agentes nativos
+for agent in $NATIVE_AGENTS; do
   if tmux has-session -t "$agent" 2>/dev/null; then
     log "✅ $agent is UP"
   else
     log "❌ $agent is DOWN — restarting..."
-    case "$agent" in
-      mainbot) bash "${SCRIPTS_DIR}/mainbot-launcher.sh" 2>/dev/null & ;;
-      devbot) bash "${SCRIPTS_DIR}/devbot-launcher.sh" 2>/dev/null & ;;
-      execbot) bash "${SCRIPTS_DIR}/execbot-launcher.sh" 2>/dev/null & ;;
-      cronbot) bash "${SCRIPTS_DIR}/cronbot-launcher.sh" 2>/dev/null & ;;
-      degenbot) bash "${SCRIPTS_DIR}/degenbot-launcher.sh" 2>/dev/null & ;;
-
-
-    esac
+    launcher="${SCRIPTS_DIR}/${agent}-launcher.sh"
+    if [ -f "$launcher" ]; then
+      bash "$launcher" 2>/dev/null &
+    fi
     all_ok=false
   fi
 done
 
+# Agentes spawnados (watchdog.registry)
+if [ -f "$WATCHDOG_REGISTRY" ]; then
+  while IFS= read -r agent; do
+    [ -z "$agent" ] && continue
+    if tmux has-session -t "$agent" 2>/dev/null; then
+      log "✅ $agent (spawned) is UP"
+    else
+      log "❌ $agent (spawned) is DOWN — restarting..."
+      launcher="${SCRIPTS_DIR}/${agent}-launcher.sh"
+      if [ -f "$launcher" ]; then
+        bash "$launcher" 2>/dev/null &
+      else
+        log "  sem launcher para $agent — ignorando"
+      fi
+      all_ok=false
+    fi
+  done < "$WATCHDOG_REGISTRY"
+fi
+
 sleep 15
 
-log "=== STATUS AFTER 5s ==="
-for agent in $AGENTS; do
+log "=== STATUS AFTER 15s ==="
+ALL_AGENTS="$NATIVE_AGENTS"
+[ -f "$WATCHDOG_REGISTRY" ] && ALL_AGENTS="$ALL_AGENTS $(grep -v '^#' "$WATCHDOG_REGISTRY" | tr '\n' ' ')"
+for agent in $ALL_AGENTS; do
+  [ -z "$agent" ] && continue
   if tmux has-session -t "$agent" 2>/dev/null; then
     log "✅ $agent"
   else
