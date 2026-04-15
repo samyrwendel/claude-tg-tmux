@@ -41,34 +41,51 @@ if errorlevel 1 (
     echo  [OK] Chromium instalado
 )
 
-:: Criar config.json se nao existir
+:: Configuracao interativa
 echo.
-echo  [3/3] Configurando...
-if not exist config.json (
-    copy config.example.json config.json >nul
-    echo  [OK] config.json criado a partir do exemplo
-) else (
-    echo  [OK] config.json ja existe, mantido
-)
+echo  [3/3] Configuracao
+echo  ==========================================
+echo.
+
+set /p GATEWAY_HOST=  Host do servidor (ex: 100.66.236.96):
+set /p GATEWAY_PORT=  Porta (padrao 18791, Enter para manter):
+set /p SENHA=         Senha:
+set /p NODE_NAME=     Nome deste PC (ex: PC do Samyr):
+
+:: Porta padrao
+if "%GATEWAY_PORT%"=="" set GATEWAY_PORT=18791
+
+:: Nome padrao
+if "%NODE_NAME%"=="" set NODE_NAME=PC Windows
+
+:: Gerar config.json via node (evita problemas de escape no bat)
+node -e "
+var fs = require('fs');
+var cfg = {
+  nodeId: 'windows-pc',
+  nodeName: '%NODE_NAME%',
+  gatewayUrl: 'ws://%GATEWAY_HOST%:%GATEWAY_PORT%',
+  password: '%SENHA%',
+  browser: {
+    executablePath: 'C:\\\\Program Files\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe',
+    headless: false,
+    viewport: { width: 1920, height: 1080 }
+  },
+  reconnectInterval: 5000
+};
+fs.writeFileSync('config.json', JSON.stringify(cfg, null, 2));
+console.log('  [OK] config.json gerado');
+"
 
 echo.
 echo  ==========================================
 echo       Instalacao concluida!
 echo  ==========================================
 echo.
-echo  Proximo passo:
-echo    1. O config.json vai abrir no Bloco de Notas
-echo    2. Troque COLOQUE_A_SENHA_AQUI pela senha combinada
-echo    3. Ajuste o caminho do Chrome se necessario
-echo    4. Salve (Ctrl+S) e feche
-echo    5. Execute INICIAR.bat para conectar
+echo  Configurado:
+echo    Host:  %GATEWAY_HOST%:%GATEWAY_PORT%
+echo    Node:  %NODE_NAME%
 echo.
-echo  SENHA: pergunte ao Samyr qual senha foi configurada no servidor.
+echo  Para conectar execute: INICIAR.bat
 echo.
-
-:: Abrir config.json para editar
-echo  Abrindo config.json...
-timeout /t 2 >nul
-notepad config.json
-
 pause
