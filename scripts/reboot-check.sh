@@ -72,10 +72,8 @@ else
   log "=== SOME AGENTS REQUIRED RESTART ==="
 fi
 
-# Notificar mainbot
-if tmux has-session -t mainbot 2>/dev/null; then
-  tmux send-keys -t mainbot "reboot-check complete" Enter 2>/dev/null
-fi
+# Notificar mainbot via file-based alert (não mistura com input do Samyr)
+bash "${SCRIPTS_DIR}/alert-mainbot.sh" "[REBOOT-CHECK] Sistema reiniciado. Agentes verificados. Relatório: ${REPORT_FILE}" 2>/dev/null
 
 # Verificar OpenClaw Gateway
 if pgrep -f "openclaw-gateway" > /dev/null; then

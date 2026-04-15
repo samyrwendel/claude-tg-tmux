@@ -32,13 +32,8 @@ log() { echo "[$(TZ=America/Manaus date '+%Y-%m-%d %H:%M:%S')] $*" >> "$LOG"; }
 
 inject_mainbot() {
   local msg="$1"
-  if /usr/bin/tmux has-session -t "$MAINBOT" 2>/dev/null; then
-    /usr/bin/tmux send-keys -t "$MAINBOT" "$msg" Enter
-    log "INJECT → mainbot: $msg"
-  else
-    echo "$msg"
-    log "mainbot offline — output no stdout: $msg"
-  fi
+  bash "${SCRIPTS_DIR}/alert-mainbot.sh" "$msg" 2>/dev/null
+  log "ALERT → mainbot: $msg"
 }
 
 resolve_model() {
@@ -142,7 +137,7 @@ Ao receber uma mensagem \`[BUS TASK YYYYMMDD-NNN]\`:
 ## Output direto ao mainbot
 
 \`\`\`bash
-tmux send-keys -t mainbot "[${NOME^^}] <resultado>" Enter
+bash ~/claude-tg-tmux/scripts/alert-mainbot.sh "[${NOME^^}] <resultado>"
 \`\`\`
 
 ## Nunca fazer

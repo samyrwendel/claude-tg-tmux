@@ -20,10 +20,8 @@ notify_mainbot() {
   local alert_file="${ALERT_DIR}/mainbot-$(date '+%Y%m%d-%H%M%S').alert"
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $msg" > "$alert_file"
   log "ALERT queued for mainbot: $msg"
-  
-  if tmux has-session -t mainbot 2>/dev/null; then
-    tmux send-keys -t mainbot "watchdog alert: $msg" Enter 2>/dev/null
-  fi
+  # Escreve em /tmp/cronbot/alerts para o hook cronbot-alerts.sh drenar
+  bash "$(dirname "${BASH_SOURCE[0]}")/alert-mainbot.sh" "$msg" 2>/dev/null
 }
 
 save_task_state() {
