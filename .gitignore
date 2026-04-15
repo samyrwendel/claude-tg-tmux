@@ -2,3 +2,7 @@
 *.env
 .env.local
 *.secret
+tray/node_modules/
+tray/gateway/node_modules/
+tray/dist/
+tray/.lock
