@@ -46,7 +46,7 @@ EOF
   log "Task state saved for $agent"
 }
 
-AGENTS="mainbot devbot execbot cronbot degenbot nanobot"
+AGENTS="mainbot devbot execbot cronbot degenbot"
 
 for agent in $AGENTS; do
   if ! tmux has-session -t "$agent" 2>/dev/null; then

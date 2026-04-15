@@ -31,6 +31,15 @@ bash "${SCRIPTS_DIR}/cronbot-launcher.sh"
 log "Iniciando degenbot (Opus 4.6)..."
 bash "${SCRIPTS_DIR}/degenbot-launcher.sh"
 
+# Spawnbot
+log "Iniciando spawnbot (Sonnet 4.6)..."
+bash "${SCRIPTS_DIR}/spawnbot-launcher.sh"
+
+# Nanobot (Claude Code + MCP + Bridge Telegram)
+log "Iniciando nanobot (Sonnet 4.6 + MCP + @agentnanobot)..."
+bash "${SCRIPTS_DIR}/nanobot-startup.sh"
+bash "${SCRIPTS_DIR}/nanobot-launcher.sh"
+
 sleep 2
 log "=== Sessões ativas ==="
 /usr/bin/tmux list-sessions 2>/dev/null || echo "Nenhuma sessão tmux ativa"

@@ -9,6 +9,7 @@ TASK_DIR="/tmp/watchdog/tasks"
 
 export HOME="/home/clawd"
 export PATH="/home/clawd/.npm-global/bin:/home/clawd/.local/bin:/usr/local/bin:/usr/bin:/bin"
+export CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1
 [ -s "$HOME/.nvm/nvm.sh" ] && source "$HOME/.nvm/nvm.sh"
 
 /usr/bin/tmux kill-session -t "$SESSION" 2>/dev/null
