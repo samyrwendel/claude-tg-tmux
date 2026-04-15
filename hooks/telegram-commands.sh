@@ -57,8 +57,13 @@ case "$CMD" in
     A_SPAWNBOT=$(agent_status spawnbot "🔁")
 
     # PM2
-    PM2_GW=$(pm2 list 2>/dev/null | grep "clawdbot-gw" | awk '{print $10}')
-    OC_STATUS="❌ offline"; [ "$PM2_GW" = "online" ] && OC_STATUS="✅ online"
+    pm2_status() {
+      local name="$1" emoji="$2"
+      local s=$(pm2 list 2>/dev/null | grep " $name " | awk '{print $10}')
+      [ "$s" = "online" ] && echo "${emoji} ${name} — ✅" || echo "${emoji} ${name} — ❌"
+    }
+    OC_GW=$(pm2_status clawdbot-gw "🤖")
+    BQ_SYNC=$(pm2_status bq-sync-daemon "📦")
 
     tg_send "$(cat <<MSG
 *Status — $(TZ=America/Manaus date '+%d/%m %H:%M')*
@@ -70,11 +75,11 @@ ${A_EXECBOT}
 ${A_CRONBOT}
 ${A_DEGENBOT}
 ${A_SPAWNBOT}
-
 TTS: ${TTS_STATUS}
 
-*Degenerado (@mentordegenbot)*
-clawdbot-gw PM2: ${OC_STATUS}
+*Serviços PM2*
+${OC_GW}
+${BQ_SYNC}
 MSG
     )"
     echo '{"decision":"block","reason":"Command handled"}'
