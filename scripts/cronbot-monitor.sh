@@ -78,12 +78,12 @@ check_tasks() {
         PANE_CONTENT=$(/usr/bin/tmux capture-pane -t "$AGENT_SESSION" -p 2>/dev/null | tail -3)
         if /usr/bin/tmux has-session -t "$AGENT_SESSION" 2>/dev/null && \
            echo "$PANE_CONTENT" | grep -qiE "thinking|tokens|✢|⏵|Baked|Working|Processing|◀▶|Razzle|Shenanigating"; then
-          # Agente vivo e trabalhando — só avisar se passou de 2x o timeout
-          if [ "$LOCK_AGE" -gt $((TASK_TIMEOUT * 2)) ]; then
+          # Agente vivo e trabalhando — só avisar se passou de 2x o timeout (sem tocar no lock)
+          WARNED_FLAG="${BUS_DIR}/status/${TASK_ID}.warned"
+          if [ "$LOCK_AGE" -gt $((TASK_TIMEOUT * 2)) ] && [ ! -f "$WARNED_FLAG" ]; then
             inject_mainbot "[CRONBOT] ⚠️ Task ${TASK_ID} em andamento há $((LOCK_AGE/60))min. Agente ${AGENT_SESSION} ainda trabalhando."
             log "Task ${TASK_ID} ainda em andamento após ${LOCK_AGE}s (agente ativo)"
-            # Atualizar timestamp do lock para não spammar
-            touch "$LOCK_FILE"
+            touch "$WARNED_FLAG"
           fi
           continue
         fi
@@ -125,7 +125,7 @@ STATUSEOF
       fi
 
       # Cleanup após notificar
-      rm -f "$task_file" "$LOCK_FILE" "$STATUS_FILE" "$NOTIFIED_FLAG"
+      rm -f "$task_file" "$LOCK_FILE" "$STATUS_FILE" "$NOTIFIED_FLAG" "${BUS_DIR}/status/${TASK_ID}.warned"
       log "Cleanup após notificação: ${TASK_ID}"
     fi
   done

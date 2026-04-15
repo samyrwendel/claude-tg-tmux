@@ -191,7 +191,7 @@ EOF
 
 SESSION="${NOME}"
 CLAUDE_BIN="/home/clawd/.npm-global/bin/claude"
-AGENT_DIR="${AGENT_CONFIG_DIR}"
+AGENT_DIR="${AGENTS_DIR}/${NOME}"
 WORK_DIR="${WORKSPACE}"
 TASK_DIR="/tmp/watchdog/tasks"
 

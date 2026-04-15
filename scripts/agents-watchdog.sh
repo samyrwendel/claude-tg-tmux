@@ -7,7 +7,7 @@ SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_DIR="/tmp/watchdog"
 LOG="${LOG_DIR}/watchdog.log"
 STATE_DIR="${LOG_DIR}/state"
-ALERT_DIR="${LOG_DIR}/alerts"
+ALERT_DIR="/tmp/cronbot/alerts"
 TASK_DIR="${LOG_DIR}/tasks"
 MAX_LOOP_SECONDS=300  # 5 min de loop = restart
 
