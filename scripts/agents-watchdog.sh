@@ -53,8 +53,8 @@ for agent in $AGENTS; do
     log "WARN: $agent DOWN — restarting..."
     save_task_state "$agent"
     case "$agent" in
-      mainbot) 
-        bash "${SCRIPTS_DIR}/nanobot-launcher.sh" 2>/dev/null &
+      mainbot)
+        bash "${SCRIPTS_DIR}/mainbot-launcher.sh" 2>/dev/null &
         notify_mainbot "$agent went DOWN. Task state saved. Restarting."
         ;;
       devbot) 
@@ -71,10 +71,6 @@ for agent in $AGENTS; do
         ;;
       degenbot) 
         bash "${SCRIPTS_DIR}/degenbot-launcher.sh" 2>/dev/null &
-        notify_mainbot "$agent went DOWN. Task state saved. Restarting."
-        ;;
-      nanobot) 
-        bash "${SCRIPTS_DIR}/nanobot-launcher.sh" 2>/dev/null &
         notify_mainbot "$agent went DOWN. Task state saved. Restarting."
         ;;
     esac
@@ -108,8 +104,8 @@ for agent in $AGENTS; do
         tmux kill-session -t "$agent" 2>/dev/null
         sleep 2
         case "$agent" in
-          mainbot) 
-            bash "${SCRIPTS_DIR}/nanobot-launcher.sh" 2>/dev/null &
+          mainbot)
+            bash "${SCRIPTS_DIR}/mainbot-launcher.sh" 2>/dev/null &
             notify_mainbot "$agent was LOOPING for ${count}s. Task state saved. Restarted."
             ;;
           devbot) 
@@ -126,10 +122,6 @@ for agent in $AGENTS; do
             ;;
           degenbot) 
             bash "${SCRIPTS_DIR}/degenbot-launcher.sh" 2>/dev/null &
-            notify_mainbot "$agent was LOOPING for ${count}s. Task state saved. Restarted."
-            ;;
-          nanobot) 
-            bash "${SCRIPTS_DIR}/nanobot-launcher.sh" 2>/dev/null &
             notify_mainbot "$agent was LOOPING for ${count}s. Task state saved. Restarted."
             ;;
         esac

@@ -35,10 +35,9 @@ bash "${SCRIPTS_DIR}/degenbot-launcher.sh"
 log "Iniciando spawnbot (Sonnet 4.6)..."
 bash "${SCRIPTS_DIR}/spawnbot-launcher.sh"
 
-# Nanobot (Claude Code + MCP + Bridge Telegram)
-log "Iniciando nanobot (Sonnet 4.6 + MCP + @agentnanobot)..."
-bash "${SCRIPTS_DIR}/nanobot-startup.sh"
-bash "${SCRIPTS_DIR}/nanobot-launcher.sh"
+# NOTA: nanobot foi removido do sistema.
+# mainbot tmux = bot Telegram principal (@dgenmainbot), gerenciado pelo systemd.
+# Degenerado/OpenClaw (@mentordegenbot) = PM2 clawdbot-gw — NÃO gerenciado aqui.
 
 sleep 2
 log "=== Sessões ativas ==="

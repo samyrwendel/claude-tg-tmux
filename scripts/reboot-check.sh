@@ -12,7 +12,7 @@ log() {
   echo "[$(date '+%H:%M:%S')] $*" | tee -a "$REPORT_FILE"
 }
 
-AGENTS="mainbot devbot execbot cronbot degenbot nanobot"
+AGENTS="mainbot devbot execbot cronbot degenbot"
 
 log "=== REBOOT CHECK $(date) ==="
 
@@ -24,12 +24,12 @@ for agent in $AGENTS; do
   else
     log "❌ $agent is DOWN — restarting..."
     case "$agent" in
-      mainbot) bash "${SCRIPTS_DIR}/../nanobot/start-nanobot.sh" 2>/dev/null & ;;
+      mainbot) bash "${SCRIPTS_DIR}/mainbot-launcher.sh" 2>/dev/null & ;;
       devbot) bash "${SCRIPTS_DIR}/devbot-launcher.sh" 2>/dev/null & ;;
       execbot) bash "${SCRIPTS_DIR}/execbot-launcher.sh" 2>/dev/null & ;;
       cronbot) bash "${SCRIPTS_DIR}/cronbot-launcher.sh" 2>/dev/null & ;;
       degenbot) bash "${SCRIPTS_DIR}/degenbot-launcher.sh" 2>/dev/null & ;;
-      nanobot) bash "${SCRIPTS_DIR}/nanobot-launcher.sh" 2>/dev/null & ;;
+
 
     esac
     all_ok=false
