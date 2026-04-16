@@ -130,6 +130,17 @@ sed "s|%h/claude-tg-tmux|$SCRIPT_DIR|g" \
 
 cp "$SCRIPT_DIR/systemd/agents-boot.service" "$SYSTEMD_USER/agents-boot.service"
 
+# claude-watchdog (mantém mainbot vivo e com plugin:telegram)
+sed "s|%h/claude-tg-tmux|$SCRIPT_DIR|g" \
+    "$SCRIPT_DIR/systemd/claude-watchdog.service" > "$SYSTEMD_USER/claude-watchdog.service"
+
+# Se havia serviço de sistema (instalação antiga), desabilitar e remover
+if systemctl is-active --quiet claude-watchdog.service 2>/dev/null; then
+    warn "Serviço de sistema claude-watchdog detectado — migrando para serviço de usuário..."
+    sudo systemctl stop claude-watchdog.service 2>/dev/null || true
+    sudo systemctl disable claude-watchdog.service 2>/dev/null || true
+fi
+
 # tmux-doctor (auto-fix mainbot)
 cp "$SCRIPT_DIR/systemd/tmux-doctor.service" "$SYSTEMD_USER/tmux-doctor.service"
 cp "$SCRIPT_DIR/systemd/tmux-doctor.timer"   "$SYSTEMD_USER/tmux-doctor.timer"
@@ -158,8 +169,8 @@ if [ -d "$SCRIPT_DIR/skills" ]; then
 fi
 
 systemctl --user daemon-reload
-systemctl --user enable mainbot.service agents-boot.service tmux-doctor.timer
-systemctl --user start mainbot.service agents-boot.service tmux-doctor.timer
+systemctl --user enable mainbot.service agents-boot.service tmux-doctor.timer claude-watchdog.service
+systemctl --user start mainbot.service agents-boot.service tmux-doctor.timer claude-watchdog.service
 
 sleep 3
 STATUS=$(systemctl --user is-active mainbot.service)
@@ -181,6 +192,13 @@ if [ "$STATUS_DOCTOR" = "active" ]; then
     info "tmux-doctor.timer ativo ✓ (auto-fix mainbot a cada 2min)"
 else
     warn "tmux-doctor.timer status: $STATUS_DOCTOR"
+fi
+
+STATUS_WATCHDOG=$(systemctl --user is-active claude-watchdog.service)
+if [ "$STATUS_WATCHDOG" = "active" ]; then
+    info "claude-watchdog.service ativo ✓ (reinicia mainbot se cair ou perder plugin:telegram)"
+else
+    warn "claude-watchdog.service status: $STATUS_WATCHDOG — verifique: journalctl --user -u claude-watchdog -n 20"
 fi
 
 # ── 8. Registrar comandos no bot Telegram ────────────────────────────────

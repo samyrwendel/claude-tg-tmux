@@ -1,0 +1,14 @@
+[Unit]
+Description=Claude tmux watchdog — mantém mainbot vivo e resolve prompts
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash %h/claude-tg-tmux/scripts/claude-watchdog.sh
+Restart=always
+RestartSec=10
+EnvironmentFile=%h/claude-tg-tmux/.env
+
+[Install]
+WantedBy=default.target
