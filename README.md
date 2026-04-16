@@ -1,13 +1,15 @@
 # claude-tg-tmux
 
-Claude Code rodando em sessão tmux persistente, integrado ao Telegram via plugin oficial.
+Claude Code CLI rodando em sessão tmux persistente, integrado ao Telegram via plugin oficial. Inclui watchdog automático, sub-agentes, gateway WebSocket para Windows (ClaudeNode), e suporte a TTS/STT.
 
 ## Stack
 
-- **Claude Code CLI** — agente principal
+- **Claude Code CLI** — agente principal (mainbot)
 - **Plugin Telegram** — `claude-plugins-official`
 - **tmux** — sessão persistente
-- **systemd** — gestão do processo + reinício automático
+- **systemd** — gestão de processos + reinício automático
+- **claude-watchdog** — mantém mainbot vivo e com plugin:telegram carregado
+- **ClaudeNode** — agente Windows conectado via WebSocket
 - **ElevenLabs** — TTS (opcional)
 - **Whisper** — STT para áudios recebidos (opcional)
 - **BigQuery** — logging de conversas (opcional)
@@ -17,23 +19,27 @@ Claude Code rodando em sessão tmux persistente, integrado ao Telegram via plugi
 | Feature | Descrição |
 |---------|-----------|
 | Typing indicator | "Digitando..." ou "Gravando áudio..." durante processamento |
-| TTS + texto | Responde com áudio ElevenLabs + legenda de texto |
+| TTS + texto | Responde com áudio ElevenLabs + legenda |
 | STT | Transcreve áudios recebidos via Whisper |
 | BQ logging | Loga incoming e outgoing no BigQuery |
 | Alertas de falha | Notificação Telegram se o serviço cair |
-| Auto-restart | systemd reinicia automaticamente (limite: 3x/10min) |
+| Auto-restart | Watchdog reinicia mainbot se cair ou perder o plugin |
+| Sub-agentes | devbot, execbot, cronbot, degenbot, spawnbot via tmux |
+| ClaudeNode | Agente Windows com acesso a câmera, tela, browser e arquivos |
 
-## Instalação rápida
+## Instalação rápida (servidor Linux)
 
 ```bash
-git clone <repo> ~/claude-tg-tmux
+git clone https://github.com/samyrwendel/claude-tg-tmux ~/claude-tg-tmux
 cd ~/claude-tg-tmux
 
-# 1. Cria e preenche o .env
-bash install.sh          # Gera .env.example → .env na primeira execução
-nano .env                # Preencha as variáveis
+# 1. Gera .env na primeira execução
+bash install.sh
 
-# 2. Instala tudo
+# 2. Preencha as variáveis obrigatórias
+nano .env
+
+# 3. Instala tudo
 bash install.sh
 ```
 
@@ -44,52 +50,110 @@ bash install.sh
 | `TELEGRAM_BOT_TOKEN` | ✅ | Token do bot (@BotFather) |
 | `ALLOWED_USER_IDS` | ✅ | IDs autorizados (ex: `30289486,99887766`) |
 | `ADMIN_CHAT_ID` | — | Chat para alertas (padrão: primeiro da lista) |
-| `WORKSPACE` | — | Diretório de trabalho do Claude |
 | `SESSION_NAME` | — | Nome da sessão tmux (padrão: `mainbot`) |
+| `WORKSPACE` | — | Diretório de trabalho do Claude (padrão: `$HOME`) |
 | `ELEVENLABS_API_KEY` | — | Chave ElevenLabs para TTS |
-| `ELEVENLABS_VOICE_ID` | — | ID da voz (padrão: voz Degenerado) |
+| `ELEVENLABS_VOICE_ID` | — | ID da voz ElevenLabs |
 | `TTS_ENABLED` | — | `true`/`false` (padrão: `true`) |
+| `OPENAI_API_KEY` | — | Chave OpenAI para STT via Whisper |
 | `BQ_ENABLED` | — | `true`/`false` (padrão: `false`) |
-| `GOOGLE_APPLICATION_CREDENTIALS` | — | Path para service-account.json |
-| `BQ_LOG_SCRIPT` | — | Path para `log-interaction.js` |
+| `GOOGLE_APPLICATION_CREDENTIALS` | — | Path para service-account.json do BigQuery |
+| `TRAY_PORT` | — | Porta do gateway ClaudeNode (padrão: `18791`) |
+| `TRAY_PASSWORD` | — | Senha do gateway ClaudeNode |
+| `CLAUDE_BIN` | — | Path do binário claude (autodetecta se vazio) |
+| `CLAUDE_CHANNEL` | — | Canal do plugin (padrão: `plugin:telegram@claude-plugins-official`) |
+| `AGENTS_DIR` | — | Diretório de agents do mainbot (padrão: `~/.claude/agents/mainbot`) |
+
+## Instalação Windows — ClaudeNode
+
+O ClaudeNode conecta o PC Windows ao servidor Linux via WebSocket, dando ao mainbot acesso a câmera, tela, browser e arquivos do Windows.
+
+```
+tray/
+└── INSTALAR.bat    ← execute este no Windows
+```
+
+O instalador pede host (IP do servidor), porta, senha e nome do PC, gera `config.json` e inicia o agente. Para iniciar sem terminal: use `start.vbs`.
+
+## Sub-agentes
+
+```bash
+# Inicia todos os sub-agentes
+bash scripts/start-all-agents.sh
+
+# Monitora e reinicia automaticamente
+bash scripts/agents-watchdog.sh
+```
+
+| Agente | Modelo | Papel |
+|--------|--------|-------|
+| mainbot | Sonnet 4.6 | Orquestrador — recebe mensagens do Telegram |
+| devbot | Opus 4.6 | Código, deploy, SSH |
+| execbot | Sonnet 4.6 | Tasks rápidas, busca, API |
+| cronbot | Sonnet 4.6 | Monitor shell — tasks, promessas |
+| degenbot | Opus 4.6 | Crypto, DeFi |
+| spawnbot | Sonnet 4.6 | Sub-tarefas paralelas |
 
 ## Comandos úteis
 
 ```bash
-# Ver sessão tmux
+# Ver sessão mainbot
 tmux attach -t mainbot
 
-# Status do serviço
-systemctl --user status mainbot
+# Status dos serviços
+systemctl --user status mainbot claude-watchdog
 
 # Logs em tempo real
 journalctl --user -u mainbot -f
+journalctl --user -u claude-watchdog -f
+tail -f /tmp/claude-watchdog.log
 
 # Reiniciar manualmente
 systemctl --user restart mainbot
+systemctl --user restart claude-watchdog
 
-# Parar
-systemctl --user stop mainbot
+# Sub-agentes
+tmux attach -t devbot
+tmux attach -t execbot
 ```
 
 ## Estrutura
 
 ```
 claude-tg-tmux/
-├── install.sh                  # Installer principal
-├── launcher.sh                 # Inicia Claude no tmux
-├── notify-failure.sh           # Alerta Telegram de falha
-├── .env.example                # Template de variáveis
-├── hooks/
-│   ├── start-typing.sh         # Typing/record_voice indicator
-│   ├── stop-typing.sh          # Para o indicator
-│   ├── send-voice.sh           # Gera e envia TTS
-│   ├── tts-on-reply.sh         # Hook PostToolUse → TTS
-│   ├── log-incoming-telegram.sh # Hook UserPromptSubmit → BQ
-│   └── log-telegram-reply.sh   # Hook PostToolUse → BQ
-├── systemd/
+├── install.sh                      # Installer principal
+├── launcher.sh                     # Inicia Claude no tmux
+├── notify-failure.sh               # Alerta Telegram de falha
+├── .env.example                    # Template de variáveis
+├── hooks/                          # Hooks do Claude Code
+│   ├── start-typing.sh
+│   ├── stop-typing.sh
+│   ├── send-voice.sh
+│   ├── tts-on-reply.sh
+│   ├── log-incoming-telegram.sh
+│   └── log-telegram-reply.sh
+├── scripts/                        # Scripts operacionais
+│   ├── claude-watchdog.sh          # Watchdog do mainbot
+│   ├── start-all-agents.sh         # Sobe todos os sub-agentes
+│   ├── agents-watchdog.sh          # Monitora sub-agentes
+│   ├── tray-gateway.sh             # Inicia gateway ClaudeNode
+│   ├── tray.sh                     # CLI wrapper para o gateway
+│   └── ...launchers dos agentes
+├── systemd/                        # Serviços systemd de usuário
 │   ├── mainbot.service
+│   ├── claude-watchdog.service
+│   ├── agents-boot.service
+│   ├── tmux-doctor.service
+│   ├── tmux-doctor.timer
 │   └── mainbot-failure-notify.service
+├── tray/                           # ClaudeNode — agente Windows
+│   ├── INSTALAR.bat                # Instalador interativo Windows
+│   ├── INICIAR.bat                 # Inicia o agente
+│   ├── start.vbs                   # Inicia sem janela de terminal
+│   ├── index.js                    # Cliente Windows (systray)
+│   ├── config.example.json         # Template de config
+│   └── gateway/                    # Servidor WebSocket (Linux)
+│       └── server.js
 └── telegram/
-    └── settings.json.template  # Hooks do Claude Code
+    └── settings.json.template      # Hooks do Claude Code
 ```
