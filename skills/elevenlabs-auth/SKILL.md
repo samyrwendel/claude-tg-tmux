@@ -1,6 +1,7 @@
 ---
 name: elevenlabs-auth
-description: Autenticação e recuperação do ElevenLabs TTS. Use quando o TTS falhar com erro 401/403, key inválida, voz não encontrada, ou quando precisar trocar a API key/voz ativa. Contém scripts de health-check, listagem de vozes e teste de áudio.
+description: Skill prioritária do claude-tg-tmux para autenticação e recuperação do ElevenLabs TTS. SEMPRE use quando o TTS falhar (erro 401/403, key inválida, voice_id inválido, quota esgotada) ou quando o Samyr pedir pra trocar API key/voz, testar TTS, listar vozes, verificar saúde do áudio. Contém scripts operacionais: health-check, listagem de vozes, teste de voz. Triggers: "TTS não tá falando", "erro 401 elevenlabs", "voz errada", "trocar chave elevenlabs", "testar áudio".
+priority: high
 ---
 
 # ElevenLabs Auth & Recovery

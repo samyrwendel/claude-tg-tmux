@@ -10,7 +10,7 @@ Claude Code CLI rodando em sessão tmux persistente, integrado ao Telegram via p
 - **systemd** — gestão de processos + reinício automático
 - **claude-watchdog** — mantém mainbot vivo e com plugin:telegram carregado
 - **ClaudeNode** — agente Windows conectado via WebSocket
-- **ElevenLabs** — TTS (opcional)
+- **ElevenLabs** — TTS (opcional) — acompanha skill `elevenlabs-auth` pra diagnóstico e recuperação
 - **Whisper** — STT para áudios recebidos (opcional)
 - **BigQuery** — logging de conversas (opcional)
 
@@ -26,6 +26,20 @@ Claude Code CLI rodando em sessão tmux persistente, integrado ao Telegram via p
 | Auto-restart | Watchdog reinicia mainbot se cair ou perder o plugin |
 | Sub-agentes | devbot, execbot, cronbot, degenbot, spawnbot via tmux |
 | ClaudeNode | Agente Windows com acesso a câmera, tela, browser e arquivos |
+
+## Skills incluídas
+
+O `install.sh` cria symlinks de todas as skills em `skills/` → `~/.claude/skills/`. Elas ficam disponíveis em qualquer sessão Claude Code rodando no host.
+
+**Skill em destaque — `elevenlabs-auth`** ⭐
+Skill obrigatória pro TTS. Diagnostica erro 401/403, troca API key, lista vozes, testa áudio. Dispara automaticamente quando o TTS falha. Scripts em [`skills/elevenlabs-auth/scripts/`](skills/elevenlabs-auth/scripts/):
+- `health-check.sh` — valida API key
+- `list-voices.sh` — lista voice_ids da conta
+- `test-voice.sh` — gera MP3 de teste
+
+Outras skills públicas: `ai-council` `bigquery-rag` `bitwarden` `browse` `dex-chart` `frontend-builder` `goplus` `ingest-youtube` `instagram-transcribe` `investigate` `krystal` `lp-monitor` `megamente` `meta-ads` `pair-agent` `polymarket` `pools` `review` `ship` `speech` `trading` `transcribe` `video-analyze` `youtube-brain-clone`.
+
+Skills pessoais opcionais ficam em `skills-private/` — instala só com `bash install.sh --with-private`.
 
 ## Instalação rápida (servidor Linux)
 
@@ -125,6 +139,12 @@ claude-tg-tmux/
 ├── launcher.sh                     # Inicia Claude no tmux
 ├── notify-failure.sh               # Alerta Telegram de falha
 ├── .env.example                    # Template de variáveis
+├── skills/                         # Skills públicas (symlinkadas p/ ~/.claude/skills)
+│   ├── elevenlabs-auth/            # ⭐ TTS: health, vozes, recuperação
+│   ├── bigquery-rag/               # Memória de conversas via VECTOR_SEARCH
+│   ├── polymarket/ krystal/ ...    # Crypto/DeFi
+│   └── ...
+├── skills-private/                 # Skills pessoais (opt-in via --with-private)
 ├── hooks/                          # Hooks do Claude Code
 │   ├── start-typing.sh
 │   ├── stop-typing.sh
