@@ -7,9 +7,13 @@ tray/gateway/node_modules/
 tray/dist/
 tray/.lock
 
-# Private skills — secrets e outputs locais
-skills-private/meta-ads/credentials.json
-skills-private/meta-ads/output/
+# Skills — secrets e outputs locais (nunca commitar)
+skills/meta-ads/credentials.json
+skills/meta-ads/output/
+skills/**/credentials.json
+skills/**/*.secret
+skills/**/__pycache__/
+skills/**/*.pyc
 skills-private/**/credentials.json
 skills-private/**/*.secret
 skills-private/**/__pycache__/
