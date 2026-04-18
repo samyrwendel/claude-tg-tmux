@@ -13,7 +13,7 @@ This skill wraps the `poly.js` CLI to interact with Polymarket prediction market
 
 All commands follow the pattern:
 ```bash
-node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js <command>
+node $HOME/.claude/skills/polymarket/scripts/poly.js <command>
 ```
 
 ---
@@ -22,7 +22,7 @@ node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js <command>
 Show on-chain USDC.e balance for the proxy wallet.
 
 ```bash
-node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js balance
+node $HOME/.claude/skills/polymarket/scripts/poly.js balance
 ```
 
 Example output:
@@ -36,7 +36,7 @@ Example output:
 List all open positions with PnL details.
 
 ```bash
-node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js positions
+node $HOME/.claude/skills/polymarket/scripts/poly.js positions
 ```
 
 Example output:
@@ -55,12 +55,12 @@ Total PnL: +$4.50
 Search for active markets by keyword.
 
 ```bash
-node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js search <query>
+node $HOME/.claude/skills/polymarket/scripts/poly.js search <query>
 ```
 
 Example:
 ```bash
-node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js search bitcoin ETF
+node $HOME/.claude/skills/polymarket/scripts/poly.js search bitcoin ETF
 ```
 
 Example output:
@@ -79,12 +79,12 @@ Example output:
 Show detailed info and current orderbook for a specific market by slug.
 
 ```bash
-node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js market <slug>
+node $HOME/.claude/skills/polymarket/scripts/poly.js market <slug>
 ```
 
 Example:
 ```bash
-node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js market bitcoin-etf-50b-aum-2026
+node $HOME/.claude/skills/polymarket/scripts/poly.js market bitcoin-etf-50b-aum-2026
 ```
 
 Example output:
@@ -105,7 +105,7 @@ Example output:
 Place a market order for YES or NO shares.
 
 ```bash
-node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js buy <slug> YES|NO <amount>
+node $HOME/.claude/skills/polymarket/scripts/poly.js buy <slug> YES|NO <amount>
 ```
 
 - `slug`: market slug from search results
@@ -114,7 +114,7 @@ node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js buy <slug> YES|NO <
 
 Example:
 ```bash
-node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js buy bitcoin-etf-50b-aum-2026 YES 10
+node $HOME/.claude/skills/polymarket/scripts/poly.js buy bitcoin-etf-50b-aum-2026 YES 10
 ```
 
 Example output:
@@ -133,12 +133,12 @@ Save this order ID if you need to cancel: 0xdeadbeef...
 Cancel a specific open order by order ID.
 
 ```bash
-node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js sell <orderId>
+node $HOME/.claude/skills/polymarket/scripts/poly.js sell <orderId>
 ```
 
 Example:
 ```bash
-node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js sell 0xdeadbeef...
+node $HOME/.claude/skills/polymarket/scripts/poly.js sell 0xdeadbeef...
 ```
 
 Example output:
@@ -152,7 +152,7 @@ Example output:
 Cancel all open orders at once.
 
 ```bash
-node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js cancel-all
+node $HOME/.claude/skills/polymarket/scripts/poly.js cancel-all
 ```
 
 Example output:
@@ -166,7 +166,7 @@ Example output:
 Show recent trade history (last 10 trades).
 
 ```bash
-node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js trades
+node $HOME/.claude/skills/polymarket/scripts/poly.js trades
 ```
 
 Example output:
@@ -185,35 +185,35 @@ Typical flow for placing a trade:
 
 1. **Check balance** — confirm available USDC before trading:
    ```bash
-   node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js balance
+   node $HOME/.claude/skills/polymarket/scripts/poly.js balance
    ```
 
 2. **Search for a market** — find the market slug:
    ```bash
-   node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js search <topic>
+   node $HOME/.claude/skills/polymarket/scripts/poly.js search <topic>
    ```
 
 3. **Inspect the market (optional)** — check orderbook and token details:
    ```bash
-   node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js market <slug>
+   node $HOME/.claude/skills/polymarket/scripts/poly.js market <slug>
    ```
 
 4. **Place the order** — buy YES or NO shares:
    ```bash
-   node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js buy <slug> YES|NO <amount>
+   node $HOME/.claude/skills/polymarket/scripts/poly.js buy <slug> YES|NO <amount>
    ```
    Save the returned Order ID.
 
 5. **Monitor positions** — check PnL on open positions:
    ```bash
-   node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js positions
+   node $HOME/.claude/skills/polymarket/scripts/poly.js positions
    ```
 
 6. **Cancel if needed** — cancel a specific order or all orders:
    ```bash
-   node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js sell <orderId>
+   node $HOME/.claude/skills/polymarket/scripts/poly.js sell <orderId>
    # or
-   node /home/clawd/.openclaw/skills/polymarket/scripts/poly.js cancel-all
+   node $HOME/.claude/skills/polymarket/scripts/poly.js cancel-all
    ```
 
 ## Notes

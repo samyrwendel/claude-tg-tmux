@@ -157,14 +157,18 @@ chmod +x "$SCRIPT_DIR"/scripts/*.sh
 # Injetar .env no serviço
 sed -i "/\[Service\]/a EnvironmentFile=$SCRIPT_DIR/.env" "$SYSTEMD_USER/mainbot.service"
 
-# ── 7b. Skills ─────────────────────────────────────────────────────────────
+# ── 7b. Skills (symlink para source-of-truth no repo) ─────────────────────
+# Symlinks permitem editar no repo e ver mudanças imediatamente em ~/.claude/skills/
 if [ -d "$SCRIPT_DIR/skills" ]; then
-    info "Instalando skills em $CLAUDE_CONFIG/skills/..."
+    info "Instalando skills (symlinks) em $CLAUDE_CONFIG/skills/..."
     mkdir -p "$CLAUDE_CONFIG/skills"
     for skill_dir in "$SCRIPT_DIR/skills"/*/; do
         skill_name=$(basename "$skill_dir")
-        cp -r "$skill_dir" "$CLAUDE_CONFIG/skills/$skill_name"
-        info "  skill: $skill_name"
+        target="$CLAUDE_CONFIG/skills/$skill_name"
+        # Se já existe como diretório (não symlink), remover antes
+        [ -d "$target" ] && [ ! -L "$target" ] && rm -rf "$target"
+        ln -snf "$skill_dir" "$target"
+        info "  skill: $skill_name → $(readlink "$target")"
     done
 fi
 
