@@ -136,9 +136,9 @@ https://suapagina.com/vendas?utm_headline=infoprodutores
 - Usar `utm_content` e `utm_term` pra variações mais granulares
 - Combinar com **Pixel events customizados** pra rastrear qual segmento converte mais
 
-### Aplicação no DeFiZero / Degenerados
+### Exemplo de aplicação (nicho DeFi/cripto)
 ```
-?utm_headline=traders+de+crypto → "Como traders de crypto estão gerando renda passiva com DeFi"
+?utm_headline=traders → "Como traders estão gerando renda passiva com DeFi"
 ?utm_headline=investidores → "Como investidores estão diversificando com pools de liquidez"
 ?utm_headline=iniciantes → "Como iniciantes estão entrando no mundo DeFi do zero"
 ```
@@ -151,10 +151,9 @@ https://suapagina.com/vendas?utm_headline=infoprodutores
 
 ---
 
-## Adapting for DeFiZero / Degenerados
-Replace context for crypto/DeFi niche:
+## Adaptação para nicho DeFi/cripto (exemplo)
 - **Antes/Depois:** "Antes eu ficava perdido em crypto, sem saber por onde começar..." → "Agora eu tenho pools gerando yield 24/7"
-- **Screen Recording:** Mostrar Krystal/DeFi tools funcionando ao vivo
-- **Depoimento:** Membros da comunidade Degenerados mostrando resultados
+- **Screen Recording:** Mostrar ferramentas DeFi (Krystal, DEX, pools) funcionando ao vivo
+- **Depoimento:** Membros da comunidade mostrando resultados
 - **Urgência:** "A comunidade fecha para novos membros em [data]"
-- **Oferta Direta:** "DeFiZero é o curso gratuito. Degenerados é onde o jogo real acontece."
+- **Oferta Direta:** "[Curso] é o gratuito. [Comunidade paga] é onde o jogo real acontece."

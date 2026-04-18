@@ -15,12 +15,12 @@ description: Autenticação e recuperação do ElevenLabs TTS. Use quando o TTS 
 
 ## Diagnóstico
 
+Os scripts estão em `{baseDir}/scripts/`. Em claude-tg-tmux resolvem para `~/.claude/skills/elevenlabs-auth/scripts/` via symlink.
+
 ### 1. Health Check
 
-Rodar o script de health check para verificar se a key atual funciona:
-
 ```bash
-~/.openclaw/skills/elevenlabs-auth/scripts/health-check.sh <API_KEY>
+{baseDir}/scripts/health-check.sh <API_KEY>
 ```
 
 Retorna:
@@ -30,7 +30,7 @@ Retorna:
 ### 2. Listar vozes disponíveis
 
 ```bash
-~/.openclaw/skills/elevenlabs-auth/scripts/list-voices.sh <API_KEY>
+{baseDir}/scripts/list-voices.sh <API_KEY>
 ```
 
 Output: `voice_id | nome` por linha.
@@ -38,62 +38,59 @@ Output: `voice_id | nome` por linha.
 ### 3. Testar uma voz específica
 
 ```bash
-~/.openclaw/skills/elevenlabs-auth/scripts/test-voice.sh <API_KEY> <VOICE_ID> "texto de teste" /tmp/test.mp3
+{baseDir}/scripts/test-voice.sh <API_KEY> <VOICE_ID> "texto de teste" /tmp/test.mp3
 ```
 
 Gera um arquivo MP3 de teste com a voz selecionada.
 
 ## Recuperação da API Key
 
-### Buscar key no Bitwarden
+### Fontes possíveis
 
+1. Variável de ambiente `ELEVENLABS_API_KEY`
+2. Bitwarden (se `bw` CLI disponível):
+   ```bash
+   export BW_SESSION=$(bw unlock --raw)   # se ainda não desbloqueado
+   bw get password "ELEVENLABS_API_KEY"
+   ```
+3. Conta no painel ElevenLabs (https://elevenlabs.io) → API Keys
+
+### Usar a key
+
+Injete a key no app/gateway que consome o TTS. Duas formas comuns:
+
+**a) Via env var:**
 ```bash
-bw get password "ELEVENLABS_API_KEY"
+export ELEVENLABS_API_KEY="<nova_api_key>"
 ```
 
-Se `BW_SESSION` não estiver setada, desbloquear primeiro:
-
-```bash
-export BW_SESSION=$(bw unlock --raw)
-```
-
-### Atualizar config do OpenClaw
-
-Editar a config do gateway para atualizar a API key e/ou voice:
-
+**b) Editar config do host (exemplo OpenClaw):**
 ```yaml
 messages:
   tts:
     elevenlabs:
       apiKey: "<NOVA_API_KEY>"
-      voiceId: "30D0RicpFBZ55TdpseEa"
+      voiceId: "<voice_id>"
 ```
 
 Campos relevantes:
-- `messages.tts.elevenlabs.apiKey` — API key da conta ElevenLabs
-- `messages.tts.elevenlabs.voiceId` — ID da voz ativa
+- `apiKey` — API key da conta ElevenLabs
+- `voiceId` — ID da voz ativa (obtido via `list-voices.sh`)
 
-### Voz padrão
+### Reiniciar o host
 
-| Nome     | Voice ID                     |
-|----------|------------------------------|
-| HardCopy | `30D0RicpFBZ55TdpseEa`      |
-
-Esta é a voz atual do Degenerado.
-
-### Reiniciar gateway
-
-Após qualquer alteração na config, reiniciar o gateway:
-
-```
+Após alterar config, reinicie o processo que usa o TTS. Exemplo OpenClaw:
+```bash
 openclaw gateway restart
 ```
 
+Outros hosts: `pm2 restart <app>`, `systemctl restart <service>`, etc.
+
 ## Fluxo completo de recuperação
 
-1. Rodar health-check com a key atual
-2. Se FAIL → buscar key no Bitwarden
+1. Rodar `health-check.sh` com a key atual
+2. Se FAIL → buscar key nova (env var / Bitwarden / painel)
 3. Rodar health-check com a nova key
-4. Se OK → atualizar config do OpenClaw
-5. Reiniciar gateway
+4. Se OK → atualizar config do host
+5. Reiniciar host
 6. Testar TTS para confirmar

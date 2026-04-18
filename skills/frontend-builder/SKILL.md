@@ -33,9 +33,11 @@ Para controle isolado (só tipografia, só cores, etc.), usar as seções isolad
 
 ## Execução (Claude Code)
 
+Config: `DEV_ROOT` aponta pro diretório onde seus projetos ficam (padrão: `$HOME/dev`).
+
 ```bash
 # HTML single-file
-OUTDIR="/home/clawd/clawd-dev/sites/<nome-do-projeto>"
+OUTDIR="${DEV_ROOT:-$HOME/dev}/sites/<nome-do-projeto>"
 mkdir -p "$OUTDIR"
 cd "$OUTDIR" && claude --permission-mode bypassPermissions --print \
   'Crie <descrição>. Use o seguinte system prompt: <SYSTEM_PROMPT_MONTADO>. Salve o resultado em index.html neste diretório.'
@@ -43,7 +45,7 @@ cd "$OUTDIR" && claude --permission-mode bypassPermissions --print \
 
 ```bash
 # Projeto React
-OUTDIR="/home/clawd/clawd-dev/sites/<nome-do-projeto>"
+OUTDIR="${DEV_ROOT:-$HOME/dev}/sites/<nome-do-projeto>"
 cd "$OUTDIR" && claude --permission-mode bypassPermissions --print \
   'Crie um projeto Vite+React+Tailwind para <descrição>. <SYSTEM_PROMPT_MONTADO>. Inicialize o projeto, instale deps e crie os componentes.'
 ```
@@ -57,4 +59,4 @@ cd "$OUTDIR" && claude --permission-mode bypassPermissions --print \
 ## Referências
 
 - `references/aesthetics.md` — prompts de estética e tech stack base
-- Cookbook local: `/home/clawd/clawd-dev/anthropic-cookbook/`
+- Cookbook (opcional): `$DEV_ROOT/anthropic-cookbook/` se clonado localmente

@@ -218,7 +218,7 @@ Typical flow for placing a trade:
 
 ## Notes
 
-- Credentials (`PROXY_WALLET`, private keys) are loaded from `/home/clawd/clawd-dev/world-monitor-polymarket/.env`.
+- Credentials (`PROXY_WALLET`, private keys) are loaded from `$POLY_APP_DIR/.env` (default: `$DEV_ROOT/world-monitor-polymarket/.env`).
 - `DRY_RUN` is forced to `false` in `poly.js` — all commands execute live trades on Polygon mainnet.
 - Token: USDC.e on Polygon. Make sure the proxy wallet has sufficient USDC.e before buying.
 - The `sell` and `cancel` commands are aliases — both cancel an open order (Polymarket uses a CLOB; positions are exited by cancelling limit orders or placing opposing market orders).

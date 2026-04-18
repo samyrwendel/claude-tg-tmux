@@ -23,12 +23,12 @@ When user asks to create ads or start a campaign:
 6. Build: Create campaign (PAUSED) → ad sets with targeting → ads with creatives
 7. Review: Show summary for approval before activating
 
-## Context: DeFiZero Project
-- **Funnel:** Meta Ads → IG followers → content warms → link bio → Telegram DeFiZero → free course → Degenerados ($50/month)
-- **Niche:** DeFi/crypto education
-- **Target:** 25-55, Brazil, interested in investments, crypto, financial freedom, passive income
-- **Instagram:** Pending — João will provide access to new IG account
-- **Strategy:** Start with engagement/followers campaign, build custom audiences from IG interactions, then retarget with conversion campaigns
+## Project Context (optional)
+Se você tem um funil/nicho/estratégia recorrente, adicione aqui como referência pra orientar criação de campanhas. Exemplo:
+- **Funnel:** Meta Ads → IG followers → link bio → Telegram → offer
+- **Niche:** <área de atuação>
+- **Target:** <faixa etária, país, interesses>
+- **Strategy:** Engagement/followers → custom audiences → retargeting de conversão
 
 ## Credentials
 Stored in `{baseDir}/credentials.json`. Initialize with:
@@ -37,13 +37,22 @@ Stored in `{baseDir}/credentials.json`. Initialize with:
 ```
 
 ### Current Setup
-- **App:** ClawdBot Ads (`REDACTED_FB_APP_ID`)
-- **Ad Account:** `REDACTED_FB_AD_ACCOUNT` (SAMYR.COM.BR)
-- **Business ID:** `REDACTED_FB_BUSINESS_ID`
-- **App Secret:** In `credentials.json`
-- **Token:** System user (non-expiring)
-- **Pixels:** 6 available (main: `REDACTED_FB_PIXEL_ID`)
-- **Instagram:** PENDING — new account to be connected by João
+Todos os IDs ficam em `credentials.json` (gitignored). Estrutura esperada:
+
+```json
+{
+  "app_id": "<your_app_id>",
+  "app_secret": "<your_app_secret>",
+  "access_token": "<your_long_lived_token>",
+  "ad_account_id": "act_<your_ad_account>",
+  "business_id": "<your_business_id>",
+  "pixels": { "<name>": "<pixel_id>" },
+  "pages": { "<name>": "<page_id>" },
+  "ig_accounts": { "<name>": "<ig_business_id>" }
+}
+```
+
+Rode `{baseDir}/scripts/meta-ads.sh init` para criar o template.
 
 ## Quick Commands
 
@@ -178,10 +187,10 @@ Templates available: `remarketing_checkout`, `remarketing_vv95`, `advantage_plus
 {baseDir}/scripts/meta-ads.sh list-audiences
 
 # Create website custom audience (pixel-based)
-{baseDir}/scripts/meta-ads.sh create-audience "Purchase 90D" --type website --pixel REDACTED_FB_PIXEL_ID --event Purchase --retention 90
+{baseDir}/scripts/meta-ads.sh create-audience "Purchase 90D" --type website --pixel <pixel_id> --event Purchase --retention 90
 
 # Create IG engagement audience
-{baseDir}/scripts/meta-ads.sh create-audience "IG Engagers 30D" --type ig --ig-account REDACTED_FB_IG_BIZ_ID --ig-rule engaged_30d
+{baseDir}/scripts/meta-ads.sh create-audience "IG Engagers 30D" --type ig --ig-account <ig_business_id> --ig-rule engaged_30d
 
 # Create lookalike
 {baseDir}/scripts/meta-ads.sh create-lookalike "LAL 1% Purchase" --source AUDIENCE_ID --ratio 0.01 --country BR

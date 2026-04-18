@@ -15,10 +15,21 @@
  *   node poly.js cashout-all
  */
 
-const APP_DIR = '/home/clawd/clawd-dev/world-monitor-polymarket';
+// APP_DIR deve apontar para o clone local do world-monitor-polymarket
+// Definir via env POLY_APP_DIR, ou default em $DEV_ROOT/world-monitor-polymarket
+const path = require('path');
+const APP_DIR = process.env.POLY_APP_DIR
+  || path.join(process.env.DEV_ROOT || path.join(process.env.HOME, 'dev'), 'world-monitor-polymarket');
+
+const fs = require('fs');
+if (!fs.existsSync(APP_DIR)) {
+  console.error(`❌ APP_DIR não encontrado: ${APP_DIR}`);
+  console.error('Defina POLY_APP_DIR ou DEV_ROOT no ambiente.');
+  process.exit(1);
+}
 process.chdir(APP_DIR);
 // Resolve modules from the app directory
-module.paths.unshift(require('path').join(APP_DIR, 'node_modules'));
+module.paths.unshift(path.join(APP_DIR, 'node_modules'));
 require('dotenv').config({ path: APP_DIR + '/.env' });
 
 // Force live mode for manual commands (DRY_RUN only applies to auto-trade)

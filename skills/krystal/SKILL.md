@@ -2,17 +2,36 @@
 
 Consulta posições de LP, pools e portfolio via Krystal Cloud API.
 
+## Config
+
+Antes de usar:
+
+1. **API Key** — via env ou Bitwarden:
+   ```bash
+   export KRYSTAL_API_KEY="..."
+   # OU (se usar Bitwarden)
+   export KRYSTAL_BW_ID="<item-id-no-bitwarden>"
+   ```
+
+2. **Aliases de wallet (opcional)** — `~/.config/krystal/wallets.conf`:
+   ```
+   # alias=endereço
+   minha=0xABCDEF...
+   secundaria=0x123456...
+   ```
+   Esse arquivo NÃO vai pro repositório.
+
 ## Uso
 
 ```bash
-# Ver posições abertas de uma wallet
-./krystal.sh positions <wallet>
+# Ver posições abertas (aceita endereço 0x ou alias)
+./krystal.sh positions <wallet|alias>
 
-# Ver posições abertas (valor > $1, ignora dust)
-./krystal.sh positions <wallet> --no-dust
+# Ignorar dust (< $1)
+./krystal.sh positions <wallet|alias> --no-dust
 
-# Ver detalhes de uma pool específica
-./krystal.sh pool <chain> <pool_address>
+# Resumo rápido
+./krystal.sh summary <wallet|alias>
 
 # Buscar pools por token
 ./krystal.sh search <token_symbol> [chain]
@@ -21,19 +40,12 @@ Consulta posições de LP, pools e portfolio via Krystal Cloud API.
 ## Exemplos
 
 ```bash
-# Posições do Samyr
-./krystal.sh positions 0x8b095455e1f828f895f01f26e651962e8b4c0a0a
+# Por endereço
+./krystal.sh positions 0xABCDEF0123456789ABCDEF0123456789ABCDEF01
 
-# Pools RIVER na BSC
-./krystal.sh search RIVER bsc
+# Por alias (configurado em wallets.conf)
+./krystal.sh positions minha
 ```
-
-## Wallets Conhecidas
-
-| Final | Endereço | Dono |
-|-------|----------|------|
-| 2188 | 0x0bcBB81c245BAA172Dd1564B1b6B02c8f69D2188 | Degenerado (opero) |
-| 0a0a | 0x8b095455e1f828f895f01f26e651962e8b4c0a0a | Samyr (só consulta) |
 
 ## Output
 
@@ -45,10 +57,6 @@ Posições mostram:
 - APR estimado
 - Range configurado vs preço atual
 - Fees pendentes
-
-## API Key
-
-Usa Bitwarden: `KRYSTAL_API_KEY_2` (2a167c4d-...)
 
 ## Filtros
 

@@ -78,8 +78,8 @@ Always design with Solarpunk aesthetic:
 2. **Reference design inspirations** — mencione fontes de inspiração (IDE themes, estéticas culturais) sem ser prescritivo demais
 3. **Call out common defaults** — diga explicitamente o que evitar ("avoid Bootstrap aesthetic", "no pill buttons")
 
-## Cookbook repo local
-`/home/clawd/clawd-dev/anthropic-cookbook/`
+## Cookbook repo local (opcional)
+Clone em `$DEV_ROOT/anthropic-cookbook/` (https://github.com/anthropics/anthropic-cookbook):
 - Notebook completo: `coding/prompting_for_frontend_aesthetics.ipynb`
 - Padrões de agentes: `patterns/agents/`
 - Agent SDK examples: `claude_agent_sdk/`

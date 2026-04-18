@@ -14,35 +14,51 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Buscar API Key do Bitwarden
+# Carrega config local (aliases de wallet) — gitignored
+# ~/.config/krystal/wallets.conf formato: alias=0xABC...
+WALLETS_CONF="${KRYSTAL_WALLETS_CONF:-$HOME/.config/krystal/wallets.conf}"
+
+# Buscar API Key:
+#   1. KRYSTAL_API_KEY env var (direto)
+#   2. Bitwarden (se KRYSTAL_BW_ID definido)
 get_api_key() {
-  export BW_SESSION="$(grep BW_SESSION ~/.bashrc | cut -d'"' -f2 2>/dev/null)"
-  bw get password "REDACTED_BW_ITEM_ID" 2>/dev/null
+  if [[ -n "$KRYSTAL_API_KEY" ]]; then
+    echo "$KRYSTAL_API_KEY"
+    return
+  fi
+  if [[ -n "$KRYSTAL_BW_ID" ]]; then
+    export BW_SESSION="$(grep BW_SESSION ~/.bashrc | cut -d'"' -f2 2>/dev/null)"
+    bw get password "$KRYSTAL_BW_ID" 2>/dev/null
+  fi
 }
 
 usage() {
   echo "Krystal Pool Consultation Tool"
   echo ""
   echo "Usage:"
-  echo "  $0 positions <wallet> [--no-dust]  - Ver posições abertas"
-  echo "  $0 summary <wallet>                - Resumo rápido"
-  echo "  $0 search <token> [chain]          - Buscar pools"
+  echo "  $0 positions <wallet|alias> [--no-dust]  - Ver posições abertas"
+  echo "  $0 summary <wallet|alias>                - Resumo rápido"
+  echo "  $0 search <token> [chain]                - Buscar pools"
   echo ""
-  echo "Wallets conhecidas:"
-  echo "  samyr  = 0x8b095455e1f828f895f01f26e651962e8b4c0a0a"
-  echo "  degen  = 0x0bcBB81c245BAA172Dd1564B1b6B02c8f69D2188"
+  echo "Config:"
+  echo "  KRYSTAL_API_KEY  ou KRYSTAL_BW_ID (Bitwarden item ID)"
+  echo "  Aliases em: $WALLETS_CONF (formato: alias=0x...)"
   echo ""
   exit 1
 }
 
-# Resolver wallet alias
+# Resolver wallet alias via arquivo de config
 resolve_wallet() {
   local wallet="$1"
-  case "$wallet" in
-    samyr|0a0a) echo "0x8b095455e1f828f895f01f26e651962e8b4c0a0a" ;;
-    degen|2188) echo "0x0bcBB81c245BAA172Dd1564B1b6B02c8f69D2188" ;;
-    *) echo "$wallet" ;;
-  esac
+  # Se já é endereço 0x completo, retorna
+  [[ "$wallet" =~ ^0x[a-fA-F0-9]{40}$ ]] && { echo "$wallet"; return; }
+  # Busca alias no arquivo de config
+  if [[ -f "$WALLETS_CONF" ]]; then
+    local addr=$(grep -E "^${wallet}=" "$WALLETS_CONF" 2>/dev/null | cut -d= -f2 | head -1)
+    [[ -n "$addr" ]] && { echo "$addr"; return; }
+  fi
+  # Fallback: retorna input (pode ser endereço válido não-0x, usuário decide)
+  echo "$wallet"
 }
 
 # Formatar número grande

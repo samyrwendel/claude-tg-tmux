@@ -7,21 +7,32 @@ metadata: {"clawdbot":{"emoji":"🔍","requires":{"bins":["node"]}}}
 
 # BigQuery RAG - Conversation Memory Search
 
-Semantic search over all past conversations stored in BigQuery using VECTOR_SEARCH.
+Semantic search over past conversations stored in BigQuery using VECTOR_SEARCH.
+
+## Setup
+
+Requer clone do projeto `bigquery-rag` (Node.js + scripts) em diretório local.
+Configure:
+
+```bash
+export BQRAG_ROOT="$HOME/bigquery-rag"          # onde está search.js
+export GOOGLE_APPLICATION_CREDENTIALS="..."     # GCP service account
+export BQRAG_TABLE="<project>.<dataset>.<table>"  # ex: my-gcp.chat.messages_rag
+```
 
 ## Quick Search
 
 ```bash
 # Basic search
-node ~/clawd/bigquery-rag/search.js "o que discutimos sobre trading?"
+node "$BQRAG_ROOT/search.js" "o que discutimos sobre trading?"
 
 # Search with filters
-node ~/clawd/bigquery-rag/search.js --role user "pools de liquidez"
-node ~/clawd/bigquery-rag/search.js --limit 10 "configuracao do bot"
-node ~/clawd/bigquery-rag/search.js --from 2026-03-01 "projetos ativos"
+node "$BQRAG_ROOT/search.js" --role user "pools de liquidez"
+node "$BQRAG_ROOT/search.js" --limit 10 "configuracao do bot"
+node "$BQRAG_ROOT/search.js" --from 2026-03-01 "projetos ativos"
 
 # JSON output (for parsing)
-node ~/clawd/bigquery-rag/search.js --json "decisoes tomadas"
+node "$BQRAG_ROOT/search.js" --json "decisoes tomadas"
 ```
 
 ## Options
@@ -46,7 +57,7 @@ node ~/clawd/bigquery-rag/search.js --json "decisoes tomadas"
 
 ## Database Info
 
-- **Table**: `gtm-mpvs7v5-ndvim.clawdbot.conversations_rag`
+- **Table**: `$BQRAG_TABLE` (definido em env)
 - **Embeddings**: OpenAI text-embedding-3-small (512 dims)
 - **Search**: BigQuery VECTOR_SEARCH (cosine similarity)
 

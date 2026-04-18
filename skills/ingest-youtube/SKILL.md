@@ -5,7 +5,21 @@ description: Ingere um vídeo do YouTube no wiki local. Baixa o áudio com yt-dl
 
 # Ingest YouTube → Wiki Local
 
-Transcreve um vídeo do YouTube e salva no wiki local do clawd.
+Transcreve um vídeo do YouTube e salva num wiki local.
+
+## Config
+
+Defina `WIKI_ROOT` no ambiente (ou no `.env` do projeto):
+
+```bash
+export WIKI_ROOT="$HOME/wiki"  # ajuste ao teu setup
+```
+
+Estrutura esperada em `$WIKI_ROOT`:
+- `tools/ingest-youtube.py` — script de ingestão
+- `raw/transcripts/` — áudios + transcrições
+- `wiki/sources/` — páginas geradas
+- `wiki/index.md` + `wiki/log.md` — índice/log
 
 ## Quando usar
 
@@ -15,7 +29,7 @@ Transcreve um vídeo do YouTube e salva no wiki local do clawd.
 ## Execução
 
 ```bash
-python /home/clawd/clawd/wiki/tools/ingest-youtube.py "<URL>" --lang pt
+python "$WIKI_ROOT/tools/ingest-youtube.py" "<URL>" --lang pt
 ```
 
 Flags opcionais:
@@ -35,21 +49,14 @@ Flags opcionais:
 Após rodar o script, ler a página criada em `wiki/sources/<slug>.md` e:
 - Extrair os principais insights
 - Criar ou atualizar páginas em `wiki/concepts/` ou `wiki/entities/` se relevante
-- Informar o Samyr com resumo do que foi ingerido
+- Informar o usuário com resumo do que foi ingerido
 
-## Paths importantes
-
-- Wiki root: `/home/clawd/clawd/wiki/`
-- Transcripts: `/home/clawd/clawd/wiki/raw/transcripts/`
-- Sources: `/home/clawd/clawd/wiki/wiki/sources/`
-- Script: `/home/clawd/clawd/wiki/tools/ingest-youtube.py`
-
-## Exemplo completo
+## Exemplo
 
 Usuário manda: "transcreve isso https://youtube.com/watch?v=xxx"
 
 ```bash
-python /home/clawd/clawd/wiki/tools/ingest-youtube.py "https://youtube.com/watch?v=xxx" --lang pt
+python "$WIKI_ROOT/tools/ingest-youtube.py" "https://youtube.com/watch?v=xxx" --lang pt
 ```
 
 Depois ler o arquivo criado e responder com resumo do conteúdo.

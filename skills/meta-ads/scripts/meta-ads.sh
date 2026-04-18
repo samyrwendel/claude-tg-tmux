@@ -52,19 +52,23 @@ api_post() {
 }
 
 cmd_init() {
+  if [[ -f "$CREDS_FILE" ]]; then
+    echo "⚠️  $CREDS_FILE já existe — não sobrescrevendo"
+    return 1
+  fi
   cat > "$CREDS_FILE" << 'EOF'
 {
-  "app_id": "REDACTED_FB_APP_ID",
-  "app_secret": "REDACTED_FB_APP_SECRET",
-  "access_token": "PASTE_TOKEN_HERE",
-  "ad_account": "REDACTED_FB_AD_ACCOUNT",
+  "app_id": "PASTE_APP_ID_HERE",
+  "app_secret": "PASTE_APP_SECRET_HERE",
+  "access_token": "PASTE_LONG_LIVED_TOKEN_HERE",
+  "ad_account": "act_PASTE_AD_ACCOUNT_ID_HERE",
   "api_version": "v21.0",
   "pixel_ids": {
-    "samyr_com_br": "REDACTED_FB_PIXEL_ID"
+    "main": "PASTE_PIXEL_ID_HERE"
   }
 }
 EOF
-  echo "Created $CREDS_FILE — paste your access_token"
+  echo "Created $CREDS_FILE — preencha os campos PASTE_*"
 }
 
 cmd_insights() {

@@ -63,15 +63,18 @@ from config import load_credentials, api_post, api_get, OUTPUT_DIR, SKILL_DIR
 
 # ─── Templates ───────────────────────────────────────────────────────────────
 
-def get_pixel_id(creds, name="samyr_com_br"):
+def get_pixel_id(creds, name="main"):
+    """Pixel ID — default 'main', override via 2º arg. Config em credentials.json.pixel_ids"""
     return creds.get("pixel_ids", {}).get(name, "")
 
 
-def get_page_id(creds, name="samyr_almeida"):
+def get_page_id(creds, name="main"):
+    """Page ID — default 'main', override via 2º arg. Config em credentials.json.pages"""
     return creds.get("pages", {}).get(name, "")
 
 
-def get_ig_account(creds, name="samyralmeida"):
+def get_ig_account(creds, name="main"):
+    """Instagram business account ID. Config em credentials.json.instagram_accounts"""
     return creds.get("instagram_accounts", {}).get(name, "")
 
 
