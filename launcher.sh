@@ -44,4 +44,11 @@ while true; do
         echo "claude process (pane PID $PANE_PID) not found" >&2
         exit 1
     fi
+
+    # Verifica se Claude ainda está ativo na pane (kill -0 passa mesmo se só o shell sobreviveu)
+    PANE_CONTENT=$(/usr/bin/tmux capture-pane -t "$SESSION_NAME" -p 2>/dev/null)
+    if echo "$PANE_CONTENT" | tail -3 | grep -qE "^\$\s*$|^clawd@|^root@|^[a-z][a-z0-9_-]*@[a-z0-9]"; then
+        echo "Claude crashed — shell prompt detected in pane (PID $PANE_PID still alive)" >&2
+        exit 1
+    fi
 done

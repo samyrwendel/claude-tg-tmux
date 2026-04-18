@@ -227,8 +227,16 @@ while true; do
         PANE_HISTORY=$(/usr/bin/tmux capture-pane -t "$SESSION_NAME" -p -S -500 2>/dev/null)
         if ! echo "$PANE_HISTORY" | grep -q "plugin:telegram"; then
             log "WARNING: Claude ativo mas sem plugin Telegram no histórico — reiniciando..."
-            /usr/bin/tmux send-keys -t "$SESSION_NAME" "" ""  # Ctrl+C
-            sleep 1
+            /usr/bin/tmux send-keys -t "$SESSION_NAME" C-c
+            sleep 2
+            # Verifica se Claude realmente parou (shell prompt apareceu)
+            POST_KILL=$(/usr/bin/tmux capture-pane -t "$SESSION_NAME" -p 2>/dev/null)
+            if ! echo "$POST_KILL" | tail -3 | grep -qE "^\$\s*$|^clawd@|^root@|^[a-z][a-z0-9_-]*@"; then
+                # C-c não funcionou — força segunda tentativa
+                log "C-c não matou Claude — tentando novamente..."
+                /usr/bin/tmux send-keys -t "$SESSION_NAME" C-c
+                sleep 2
+            fi
             /usr/bin/tmux send-keys -t "$SESSION_NAME" "$CLAUDE_CMD" Enter
             startup_watch
             STUCK_COUNT=0
