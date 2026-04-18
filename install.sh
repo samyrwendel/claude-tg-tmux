@@ -1,7 +1,15 @@
 #!/bin/bash
 # claude-tg-tmux — Installer
-# Uso: bash install.sh
+# Uso: bash install.sh [--with-private]
+#   --with-private  Também instala skills de skills-private/ (workflows pessoais)
 set -e
+
+WITH_PRIVATE=0
+for arg in "$@"; do
+    case "$arg" in
+        --with-private) WITH_PRIVATE=1 ;;
+    esac
+done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_CONFIG="$HOME/.claude"
@@ -159,17 +167,31 @@ sed -i "/\[Service\]/a EnvironmentFile=$SCRIPT_DIR/.env" "$SYSTEMD_USER/mainbot.
 
 # ── 7b. Skills (symlink para source-of-truth no repo) ─────────────────────
 # Symlinks permitem editar no repo e ver mudanças imediatamente em ~/.claude/skills/
-if [ -d "$SCRIPT_DIR/skills" ]; then
-    info "Instalando skills (symlinks) em $CLAUDE_CONFIG/skills/..."
-    mkdir -p "$CLAUDE_CONFIG/skills"
-    for skill_dir in "$SCRIPT_DIR/skills"/*/; do
-        skill_name=$(basename "$skill_dir")
-        target="$CLAUDE_CONFIG/skills/$skill_name"
+install_skills_from() {
+    local src_dir="$1"
+    [ -d "$src_dir" ] || return 0
+    for skill_dir in "$src_dir"/*/; do
+        [ -d "$skill_dir" ] || continue
+        local skill_name=$(basename "$skill_dir")
+        local target="$CLAUDE_CONFIG/skills/$skill_name"
         # Se já existe como diretório (não symlink), remover antes
         [ -d "$target" ] && [ ! -L "$target" ] && rm -rf "$target"
         ln -snf "$skill_dir" "$target"
         info "  skill: $skill_name → $(readlink "$target")"
     done
+}
+
+if [ -d "$SCRIPT_DIR/skills" ]; then
+    info "Instalando skills públicos em $CLAUDE_CONFIG/skills/..."
+    mkdir -p "$CLAUDE_CONFIG/skills"
+    install_skills_from "$SCRIPT_DIR/skills"
+fi
+
+if [ "$WITH_PRIVATE" = "1" ] && [ -d "$SCRIPT_DIR/skills-private" ]; then
+    info "Instalando skills privados (--with-private) em $CLAUDE_CONFIG/skills/..."
+    install_skills_from "$SCRIPT_DIR/skills-private"
+elif [ -d "$SCRIPT_DIR/skills-private" ]; then
+    warn "skills-private/ existe mas não será instalado. Use --with-private se quiser."
 fi
 
 systemctl --user daemon-reload

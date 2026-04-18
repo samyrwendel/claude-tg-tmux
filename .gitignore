@@ -6,3 +6,9 @@ tray/node_modules/
 tray/gateway/node_modules/
 tray/dist/
 tray/.lock
+
+# Private skills — secrets e outputs locais
+skills-private/meta-ads/credentials.json
+skills-private/meta-ads/output/
+skills-private/**/credentials.json
+skills-private/**/*.secret
