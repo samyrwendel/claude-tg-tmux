@@ -12,3 +12,5 @@ skills-private/meta-ads/credentials.json
 skills-private/meta-ads/output/
 skills-private/**/credentials.json
 skills-private/**/*.secret
+skills-private/**/__pycache__/
+skills-private/**/*.pyc
