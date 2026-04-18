@@ -60,12 +60,15 @@ pane_content() {
 
 # Verificar se sessão existe
 if ! tmux has-session -t "$SESSION" 2>/dev/null; then
-    log "Sessão '$SESSION' não existe — recriando via mainbot-launcher.sh"
+    log "Sessão '$SESSION' não existe — delegando ao mainbot.service"
     fix_trust
-    if [ -f "$MAINBOT_LAUNCHER" ]; then
+    # Delega criação ao systemd (evita corrida com mainbot.service/launcher.sh)
+    if systemctl --user is-enabled --quiet mainbot.service 2>/dev/null; then
+        systemctl --user restart mainbot.service
+    elif [ -f "$MAINBOT_LAUNCHER" ]; then
+        # Fallback: systemd não configurado
         bash "$MAINBOT_LAUNCHER" &
     else
-        # fallback direto
         tmux new-session -d -s "$SESSION" -c "$WORKDIR" "$CLAUDE_BIN" $CLAUDE_ARGS
     fi
     sleep 10

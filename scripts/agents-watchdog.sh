@@ -60,8 +60,9 @@ for agent in $AGENTS; do
     save_task_state "$agent"
     case "$agent" in
       mainbot)
-        bash "${SCRIPTS_DIR}/mainbot-launcher.sh" 2>/dev/null &
-        notify_mainbot "$agent went DOWN. Task state saved. Restarting."
+        # Delega ao systemd (evita corrida com mainbot.service)
+        systemctl --user restart mainbot.service 2>/dev/null &
+        notify_mainbot "$agent went DOWN. Task state saved. Restarting via mainbot.service."
         ;;
       devbot) 
         bash "${SCRIPTS_DIR}/devbot-launcher.sh" 2>/dev/null &
@@ -121,8 +122,9 @@ for agent in $AGENTS; do
         sleep 2
         case "$agent" in
           mainbot)
-            bash "${SCRIPTS_DIR}/mainbot-launcher.sh" 2>/dev/null &
-            notify_mainbot "$agent was LOOPING for ${count}s. Task state saved. Restarted."
+            # Delega ao systemd (evita corrida com mainbot.service)
+            systemctl --user restart mainbot.service 2>/dev/null &
+            notify_mainbot "$agent was LOOPING for ${count}s. Task state saved. Restarted via mainbot.service."
             ;;
           devbot) 
             bash "${SCRIPTS_DIR}/devbot-launcher.sh" 2>/dev/null &
