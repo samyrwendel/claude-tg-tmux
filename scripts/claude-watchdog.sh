@@ -151,6 +151,8 @@ CONSECUTIVE_DEAD=0
 PREV_SCREEN=""
 STUCK_COUNT=0
 STUCK_THRESHOLD=3
+COMPACT_RUNNING=0
+COMPACT_START=0
 
 while true; do
     sleep 30
@@ -241,6 +243,56 @@ while true; do
             startup_watch
             STUCK_COUNT=0
             PREV_SCREEN=""
+        fi
+    fi
+
+    # ── Telegram stuck check: restart se thinking > 8 min ──
+    THINK_SEC=$(echo "$CONTENT" | grep -oE "Cooked for [0-9]+s" | grep -oE "[0-9]+" | head -1)
+    if [ -n "$THINK_SEC" ] && [ "$THINK_SEC" -ge 480 ]; then
+        log "TELEGRAM STUCK: thinking for ${THINK_SEC}s — restarting mainbot"
+        /usr/bin/tmux kill-session -t "$SESSION_NAME" 2>/dev/null
+        sleep 3
+        nohup bash /home/clawd/claude-tg-tmux/scripts/mainbot-launcher.sh > /tmp/mainbot-launcher.log 2>&1 &
+        STUCK_COUNT=0
+        PREV_SCREEN=""
+        sleep 5
+        continue
+    fi
+
+    # ── Contexto alto (≥80%): força /compact preventivo ──────────────────────
+    CTX_PCT=$(echo "$CONTENT" | grep -oE '[0-9]+%' | tail -1 | tr -d '%')
+    if [ -n "$CTX_PCT" ] && [ "$CTX_PCT" -ge 80 ] && is_claude_active "$CONTENT"; then
+        # Só dispara se Claude estiver no prompt (❯), não se estiver processando
+        if echo "$CONTENT" | tail -5 | grep -qE "^❯\s*$"; then
+            log "CONTEXT HIGH (${CTX_PCT}%) — triggering /compact"
+            /usr/bin/tmux send-keys -t "$SESSION_NAME" "/compact" Enter
+            COMPACT_START=$(date +%s)
+            COMPACT_RUNNING=1
+            STUCK_COUNT=0
+            PREV_SCREEN=""
+            continue
+        fi
+    fi
+
+    # ── Compact travado: mata se passar de 5 min sem terminar ─────────────────
+    if [ "${COMPACT_RUNNING:-0}" -eq 1 ]; then
+        # Detecta se o compact terminou (prompt ❯ sem "Compacting" ou "Kneading")
+        if ! echo "$CONTENT" | grep -qiE "Compacting|Kneading|Writing.*memory"; then
+            log "Compact finished"
+            COMPACT_RUNNING=0
+            COMPACT_START=0
+        else
+            ELAPSED=$(( $(date +%s) - ${COMPACT_START:-0} ))
+            if [ "$ELAPSED" -ge 300 ]; then
+                log "COMPACT STUCK for ${ELAPSED}s — killing session, watchdog will recreate"
+                PANE_PID=$(/usr/bin/tmux list-panes -t "$SESSION_NAME" -F "#{pane_pid}" 2>/dev/null | head -1)
+                [ -n "$PANE_PID" ] && kill -9 "$PANE_PID" 2>/dev/null
+                COMPACT_RUNNING=0
+                COMPACT_START=0
+                STUCK_COUNT=0
+                PREV_SCREEN=""
+                continue
+            fi
         fi
     fi
 done
